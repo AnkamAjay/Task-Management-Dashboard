@@ -1,0 +1,134 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "taskName": "Infrastructure Security Audit",
+      "notes": {
+        "fileName": "security_audit_checklist.pdf",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Alice Morgan",
+      "startDateTime": "2026-03-10T09:00:00",
+      "deadline": "2026-03-18T17:00:00",
+      "endTime": "2026-03-18T18:30:00",
+      "priority": "High"
+    },
+    {
+      "id": 2,
+      "taskName": "Quarterly Financial Report",
+      "notes": {
+        "fileName": "Q1_financial_report.xlsx",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Bob Chen",
+      "startDateTime": "2026-03-12T10:00:00",
+      "deadline": "2026-03-20T23:59:00",
+      "endTime": "2026-03-21T01:00:00",
+      "priority": "Medium"
+    },
+    {
+      "id": 3,
+      "taskName": "Mobile App UI Redesign",
+      "notes": {
+        "fileName": "app_wireframes_v3.fig",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Priya Sharma",
+      "startDateTime": "2026-03-08T08:30:00",
+      "deadline": "2026-03-17T12:00:00",
+      "endTime": null,
+      "priority": "High"
+    },
+    {
+      "id": 4,
+      "taskName": "Database Migration to Cloud",
+      "notes": {
+        "fileName": "migration_plan.docx",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Carlos Rivera",
+      "startDateTime": "2026-03-15T09:00:00",
+      "deadline": "2026-03-25T18:00:00",
+      "endTime": null,
+      "priority": "High"
+    },
+    {
+      "id": 5,
+      "taskName": "Team Onboarding Documentation",
+      "notes": {
+        "fileName": "onboarding_guide_v2.pdf",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Dana White",
+      "startDateTime": "2026-03-14T13:00:00",
+      "deadline": "2026-03-28T17:00:00",
+      "endTime": null,
+      "priority": "Low"
+    },
+    {
+      "id": 6,
+      "taskName": "API Gateway Configuration",
+      "notes": {
+        "fileName": "api_gateway_config.yaml",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Alice Morgan",
+      "startDateTime": "2026-03-16T10:00:00",
+      "deadline": "2026-03-20T23:59:00",
+      "endTime": null,
+      "priority": "High"
+    },
+    {
+      "id": 7,
+      "taskName": "SEO Content Optimization",
+      "notes": {
+        "fileName": "seo_keywords_analysis.csv",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Elena Torres",
+      "startDateTime": "2026-03-13T09:00:00",
+      "deadline": "2026-03-22T17:00:00",
+      "endTime": null,
+      "priority": "Medium"
+    },
+    {
+      "id": 8,
+      "taskName": "Legal Compliance Review",
+      "notes": {
+        "fileName": "gdpr_compliance_report.pdf",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Frank Liu",
+      "startDateTime": "2026-03-10T09:00:00",
+      "deadline": "2026-03-18T17:00:00",
+      "endTime": "2026-03-18T17:45:00",
+      "priority": "Medium"
+    },
+    {
+      "id": 9,
+      "taskName": "Monthly Newsletter Design",
+      "notes": {
+        "fileName": "newsletter_march_draft.psd",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Grace Kim",
+      "startDateTime": "2026-03-17T10:00:00",
+      "deadline": "2026-03-30T12:00:00",
+      "endTime": null,
+      "priority": "Low"
+    },
+    {
+      "id": 10,
+      "taskName": "CI/CD Pipeline Setup",
+      "notes": {
+        "fileName": "cicd_pipeline_spec.md",
+        "downloadUrl": "https://www.w3.org/WAI/WCAG21/Techniques/pdf/PDF1"
+      },
+      "assignedTo": "Priya Sharma",
+      "startDateTime": "2026-03-16T08:00:00",
+      "deadline": "2026-03-22T18:00:00",
+      "endTime": null,
+      "priority": "Medium"
+    }
+  ]
+}

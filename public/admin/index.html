@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Admin panel for managing tasks — add, edit, and delete tasks." />
+  <title>Task Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-brand">
+      <span class="brand-icon">⚙️</span>
+      <div>
+        <h1>Task Admin Panel</h1>
+        <span class="brand-badge">Full Access</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="api-status" id="apiStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting...</span>
+      </span>
+      <a href="/" target="_blank" class="view-dashboard-btn">
+        📋 View Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="layout">
+
+    <!-- FORM PANEL -->
+    <aside class="form-panel">
+      <div class="panel-header">
+        <h2 id="formTitle">➕ Add New Task</h2>
+        <button class="cancel-btn hidden" id="cancelEditBtn" onclick="cancelEdit()">✕ Cancel</button>
+      </div>
+
+      <form id="taskForm" onsubmit="handleSubmit(event)">
+        <input type="hidden" id="taskId" />
+
+        <div class="form-group">
+          <label for="taskName">Task Name <span class="required">*</span></label>
+          <input type="text" id="taskName" placeholder="e.g. Deploy to production" required />
+        </div>
+
+        <div class="form-group">
+          <label for="assignedTo">Assigned To <span class="required">*</span></label>
+          <input type="text" id="assignedTo" placeholder="e.g. Alice Morgan" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDateTime">Start Date & Time <span class="required">*</span></label>
+            <input type="datetime-local" id="startDateTime" required />
+          </div>
+          <div class="form-group">
+            <label for="deadline">Deadline <span class="required">*</span></label>
+            <input type="datetime-local" id="deadline" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="endTime">End Time (Optional)</label>
+          <input type="datetime-local" id="endTime" />
+        </div>
+
+        <div class="form-group">
+          <label for="priority">Priority <span class="required">*</span></label>
+          <select id="priority" required>
+            <option value="">Select priority</option>
+            <option value="High">🔴 High</option>
+            <option value="Medium">🟠 Medium</option>
+            <option value="Low">🟢 Low</option>
+          </select>
+        </div>
+
+        <fieldset class="form-fieldset">
+          <legend>Attachment (Optional)</legend>
+          <div class="form-group">
+            <label for="fileName">File Name</label>
+            <input type="text" id="fileName" placeholder="e.g. report_v2.pdf" />
+          </div>
+          <div class="form-group">
+            <label for="downloadUrl">Download URL</label>
+            <input type="url" id="downloadUrl" placeholder="https://example.com/file.pdf" />
+          </div>
+        </fieldset>
+
+        <div class="form-group">
+          <label for="taskNotes">Notes</label>
+          <textarea id="taskNotes" placeholder="Additional notes about the task..." rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span>➕ Add Task</span>
+        </button>
+      </form>
+    </aside>
+
+    <!-- TASK LIST PANEL -->
+    <main class="list-panel">
+      <div class="list-header">
+        <div class="list-title-row">
+          <h2>All Tasks <span class="task-count-badge" id="taskCount">0</span></h2>
+          <div class="list-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search tasks..." oninput="renderTasks()" />
+            <select id="filterPriority" class="filter-select" onchange="renderTasks()">
+              <option value="All">All Priorities</option>
+              <option value="High">🔴 High</option>
+              <option value="Medium">🟠 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="taskList" class="task-list">
+        <div class="loading-skeleton">
+          <div class="skel-card"></div>
+          <div class="skel-card"></div>
+          <div class="skel-card"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- DELETE CONFIRM MODAL -->
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-icon">🗑️</div>
+      <h3>Delete Task?</h3>
+      <p id="modalMessage">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="cancel-modal-btn" onclick="closeModal()">Cancel</button>
+        <button class="confirm-delete-btn" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast hidden" id="toast">
+    <span id="toastMessage"></span>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
