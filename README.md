@@ -27,7 +27,7 @@ npm run dev
 ## 🔗 Access Links
 
 - **User Dashboard (Read-Only):** [http://localhost:5173](http://localhost:5173)
-- **Admin Panel (Full CRUD):** [http://localhost:5173/admin/index.html](http://localhost:5173/admin/index.html)
+- **Admin Panel (Full CRUD):** [http://localhost:5173/admin/](http://localhost:5173/admin/)
 
 ---
 
