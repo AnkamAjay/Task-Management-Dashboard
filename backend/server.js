@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
+import authRoutes from './routes/auth.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -20,8 +21,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Routes placeholders (to be implemented later)
-// app.use('/api/auth', authRoutes);
+// Routes
+app.use('/api/auth', authRoutes);
 // app.use('/api/tasks', taskRoutes);
 
 // Global Error Handler Middleware
