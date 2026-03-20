@@ -1,6 +1,15 @@
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
 function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, lastUpdated, taskCount }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   const formattedTime = lastUpdated
     ? lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     : 'Fetching...';
@@ -11,7 +20,7 @@ function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, 
         <div className="brand-icon">📋</div>
         <div className="brand-text">
           <h1>Task Dashboard</h1>
-          <span className="brand-subtitle">Read-Only View</span>
+          <span className="brand-subtitle">{user?.role === 'admin' ? 'Admin View' : 'Read-Only View'}</span>
         </div>
       </div>
 
@@ -54,6 +63,16 @@ function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, 
         <div className="refresh-info">
           <span className="pulse-dot"></span>
           <span>Updated {formattedTime}</span>
+        </div>
+
+        {user?.role === 'admin' && (
+          <a href="/admin/" className="admin-link-btn">Admin Panel</a>
+        )}
+
+        <div className="user-section">
+          <div className="user-avatar">{user?.name?.charAt(0)?.toUpperCase()}</div>
+          <span className="user-name">{user?.name}</span>
+          <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </div>
     </header>
