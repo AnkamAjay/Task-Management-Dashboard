@@ -82,14 +82,6 @@ function Dashboard() {
           <TaskTable tasks={processedTasks} />
         )}
       </main>
-      
-      {/* Temporary Logout Button to verify acceptance criteria */}
-      <button 
-        onClick={logout} 
-        style={{ position: 'fixed', bottom: '2rem', right: '2rem', padding: '12px 24px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontWeight: 600, zIndex: 1000 }}
-      >
-        Sign Out
-      </button>
     </div>
   );
 }
