@@ -1,6 +1,6 @@
 .task-row {
   display: grid;
-  grid-template-columns: 60px 2fr 1.4fr 1.4fr 1.4fr 1.2fr 120px 1.6fr;
+  grid-template-columns: 100px 2fr 1.4fr 1.4fr 1.4fr 1.2fr 120px 1.6fr;
   align-items: center;
   padding: 0 20px;
   min-height: 64px;
@@ -52,10 +52,16 @@
 }
 
 .task-id {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.78rem;
   color: var(--text-muted);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  vertical-align: middle;
 }
 
 .col-name {
