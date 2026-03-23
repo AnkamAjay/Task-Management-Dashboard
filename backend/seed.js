@@ -41,11 +41,9 @@ const seedDatabase = async () => {
         notes: task.notes && task.notes.fileName ? task.notes : undefined,
       };
 
-      // Since the Schema has 'createdBy: { required: true }', storing null will throw a validation error.
-      // We are creating a dummy random ObjectId so the database accepts it without breaking the Schema rules,
-      // while technically keeping it orphaned/null from any real user.
-      mappedTask.createdBy = new mongoose.Types.ObjectId(); 
-
+      // Legacy required: true hack removed. 
+      // createdBy is now legally optional in the Task Schema.
+      
       return mappedTask;
     });
 
