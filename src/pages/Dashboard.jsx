@@ -31,6 +31,10 @@ function Dashboard() {
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        logout();
+        return;
+      }
       setError('Unable to reach the task server. Please ensure the API server is running on port 3001.');
       console.error('Fetch error:', err);
     } finally {
