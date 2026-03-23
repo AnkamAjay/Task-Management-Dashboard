@@ -15,7 +15,7 @@ const app = express();
 
 // Middleware
 app.use(express.json()); // Parses incoming JSON requests
-app.use(cors({ origin: process.env.CLIENT_URL })); // Allows requests from our React app
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' })); // Allows requests from our React app
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
