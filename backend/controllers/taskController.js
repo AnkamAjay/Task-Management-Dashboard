@@ -5,8 +5,19 @@ import Task from '../models/Task.js';
 // @access  Private (All authenticated users)
 export const getTasks = async (req, res, next) => {
   try {
-    // Find all tasks, populate createdBy with name/email, and sort by deadline ascending
-    const tasks = await Task.find()
+    const filter = {};
+
+    // If ?assignedTo=me is passed, filter to only the logged-in user's tasks
+    if (req.query.assignedTo === 'me') {
+      filter.assignedTo = req.user.id;
+    } 
+    // If ?assignedTo=<userId> is passed (admin use), filter to that user
+    else if (req.query.assignedTo) {
+      filter.assignedTo = req.query.assignedTo;
+    }
+
+    // Find tasks, populate, and sort
+    const tasks = await Task.find(filter)
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
       .sort({ deadline: 1 });
