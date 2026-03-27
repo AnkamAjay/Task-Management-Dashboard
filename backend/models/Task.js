@@ -7,9 +7,10 @@ const taskSchema = new mongoose.Schema({
     trim: true
   },
   assignedTo: {
-    type: String,
-    required: true,
-    trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
+    default: null
   },
   startDateTime: {
     type: Date,

@@ -38,11 +38,30 @@ async function init() {
   if (currentUser) {
     document.getElementById('adminUserName').textContent = currentUser.name;
   }
+  await fetchUsers();
   await fetchTasks();
   setInterval(fetchTasks, 10000);
 }
 
 // ─── API Calls ───────────────────────────────────────────────────────────────
+
+async function fetchUsers() {
+  try {
+    const res = await fetch(`${API_BASE}/api/users`, { headers: getAuthHeaders() });
+    if (!res.ok) return;
+    const users = await res.json();
+    const select = document.getElementById('assignedTo');
+    select.innerHTML = '<option value="">-- Select Assignee --</option>';
+    users.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.id || u._id;   // id is set by toJSON transform
+      opt.textContent = `${u.name} (${u.email})`;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    console.warn('Could not load users for dropdown:', e.message);
+  }
+}
 
 async function fetchTasks() {
   try {
@@ -76,11 +95,12 @@ async function updateTask(id, data) {
   const res = await fetch(`${API_URL}/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ ...data, id }),
+    body: JSON.stringify(data),
   });
   if (!res.ok) {
     if (handleUnauthorized(res.status)) return;
-    throw new Error('Failed to update task');
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Server error ${res.status}`);
   }
   return res.json();
 }
@@ -110,17 +130,21 @@ async function handleSubmit(e) {
 
   const data = {
     taskName: document.getElementById('taskName').value.trim(),
-    assignedTo: document.getElementById('assignedTo').value.trim(),
+    assignedTo: document.getElementById('assignedTo').value || null,
     startDateTime: document.getElementById('startDateTime').value,
     deadline: document.getElementById('deadline').value,
     endTime: document.getElementById('endTime').value || null,
     priority: document.getElementById('priority').value,
-    notes: fileName && downloadUrl ? { fileName, downloadUrl } : null,
   };
+
+  // Only include notes if both fields are filled — never send null
+  if (fileName && downloadUrl) {
+    data.notes = { fileName, downloadUrl };
+  }
 
   try {
     if (id) {
-      await updateTask(parseInt(id), data);
+      await updateTask(id, data);
       showToast('✅ Task updated successfully!', 'success');
     } else {
       await createTask(data);
@@ -143,7 +167,9 @@ function populateEditForm(task) {
 
   document.getElementById('taskId').value = task.id;
   document.getElementById('taskName').value = task.taskName;
-  document.getElementById('assignedTo').value = task.assignedTo;
+  // Pre-select the correct user in the dropdown
+  const assignedId = task.assignedTo?._id || task.assignedTo?.id || task.assignedTo || '';
+  document.getElementById('assignedTo').value = assignedId;
   document.getElementById('startDateTime').value = toDatetimeLocal(task.startDateTime);
   document.getElementById('deadline').value = toDatetimeLocal(task.deadline);
   document.getElementById('endTime').value = task.endTime ? toDatetimeLocal(task.endTime) : '';
@@ -180,8 +206,9 @@ function renderTasks() {
   const filterP = document.getElementById('filterPriority').value;
 
   let tasks = allTasks.filter(t => {
+    const assignedName = t.assignedTo?.name ?? '';
     const matchSearch = t.taskName.toLowerCase().includes(search) ||
-                        t.assignedTo.toLowerCase().includes(search);
+                        assignedName.toLowerCase().includes(search);
     const matchPriority = filterP === 'All' || t.priority === filterP;
     return matchSearch && matchPriority;
   });
@@ -233,14 +260,14 @@ function buildTaskCard(task) {
           ${overdue ? '<span class="overdue-tag">OVERDUE</span>' : ''}
         </div>
         <div class="task-card-actions">
-          <button class="edit-btn" onclick="populateEditForm(${JSON.stringify(JSON.stringify(task))})" title="Edit task">✏️ Edit</button>
-          <button class="delete-btn" onclick="openDeleteModal(${task.id}, '${escapeHtml(task.taskName)}')" title="Delete task">🗑️ Delete</button>
+          <button class="edit-btn" onclick="startEdit('${task.id}')" title="Edit task">✏️ Edit</button>
+          <button class="delete-btn" onclick="openDeleteModal('${task.id}', '${escapeHtml(task.taskName)}')" title="Delete task">🗑️ Delete</button>
         </div>
       </div>
       <div class="task-card-meta">
         <div class="meta-item">
           <span class="meta-label">Assigned</span>
-          <span class="meta-value avatar-row"><span class="avatar-sm">${task.assignedTo.charAt(0)}</span>${escapeHtml(task.assignedTo)}</span>
+          <span class="meta-value avatar-row"><span class="avatar-sm">${task.assignedTo?.name?.charAt(0) ?? '?'}</span>${escapeHtml(task.assignedTo?.name ?? 'Unassigned')}</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Priority</span>
@@ -266,11 +293,14 @@ function buildTaskCard(task) {
     </div>`;
 }
 
-// workaround to safely pass task object to onclick
-window.populateEditForm = function(jsonStr) {
-  const task = JSON.parse(jsonStr);
-  populateEditForm(task);
-};
+// Look up task by ID from allTasks and open edit form
+function startEdit(id) {
+  console.log('startEdit called with id:', id);
+  const task = allTasks.find(t => String(t.id) === String(id));
+  console.log('task found:', task);
+  if (task) populateEditForm(task);
+  else console.warn('Task not found in allTasks for id:', id);
+}
 
 function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');

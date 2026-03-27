@@ -32,7 +32,7 @@ const seedDatabase = async () => {
       // Create a clean object mapping exactly what we need
       const mappedTask = {
         taskName: task.taskName,
-        assignedTo: task.assignedTo,
+        // assignedTo omitted — seeded tasks have no linked user, will show as null/Unassigned
         startDateTime: task.startDateTime,
         deadline: task.deadline,
         endTime: task.endTime || null,

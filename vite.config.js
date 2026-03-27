@@ -18,5 +18,10 @@ export default defineConfig({
     },
   ],
   appType: 'mpa',
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
+  },
 })
 
