@@ -19,12 +19,16 @@ function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('All');
-  const { token, logout } = useAuth(); 
+  const { token, user, logout } = useAuth();
 
   const fetchTasks = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
     try {
-      const response = await axios.get(TASKS_API, {
+      const endpoint = user?.role === 'admin' 
+        ? TASKS_API 
+        : `${TASKS_API}?assignedTo=me`;
+
+      const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTasks(response.data);
@@ -51,9 +55,10 @@ function Dashboard() {
   const processedTasks = tasks
     .filter((task) => {
       const term = searchTerm.toLowerCase();
+      const assignedName = task.assignedTo?.name ?? '';
       const matchesSearch =
         task.taskName.toLowerCase().includes(term) ||
-        task.assignedTo.toLowerCase().includes(term);
+        assignedName.toLowerCase().includes(term);
       const matchesPriority =
         priorityFilter === 'All' || task.priority === priorityFilter;
       return matchesSearch && matchesPriority;
