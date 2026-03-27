@@ -48,8 +48,8 @@ function TaskCard({ task }) {
       </div>
 
       <div className="col-assigned">
-        <div className="avatar">{task.assignedTo.charAt(0)}</div>
-        <span>{task.assignedTo}</span>
+        <div className="avatar">{task.assignedTo?.name?.charAt(0) ?? '?'}</div>
+        <span>{task.assignedTo?.name ?? 'Unassigned'}</span>
       </div>
 
       <div className="col-start">

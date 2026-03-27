@@ -7,6 +7,7 @@ export const getTasks = async (req, res, next) => {
   try {
     // Find all tasks, populate createdBy with name/email, and sort by deadline ascending
     const tasks = await Task.find()
+      .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
       .sort({ deadline: 1 });
     res.json(tasks);
@@ -20,7 +21,9 @@ export const getTasks = async (req, res, next) => {
 // @access  Private
 export const getTask = async (req, res, next) => {
   try {
-    const task = await Task.findById(req.params.id).populate('createdBy', 'name email');
+    const task = await Task.findById(req.params.id)
+      .populate('assignedTo', 'name email')
+      .populate('createdBy', 'name email');
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
@@ -57,7 +60,7 @@ export const updateTask = async (req, res, next) => {
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true } // Returns the updated document and runs Schema validations
+      { new: true } // Returns the updated document
     );
 
     if (!task) {
