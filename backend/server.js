@@ -9,6 +9,7 @@ import taskRoutes from './routes/tasks.js';
 import userRoutes from './routes/users.js';
 import timeEntryRoutes from './routes/timeEntries.js';
 import projectRoutes from './routes/projects.js';
+import reportRoutes from './routes/reports.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/time-entries', timeEntryRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Serve React production build
 app.use(express.static(path.join(__dirname, '../dist')));
