@@ -130,3 +130,40 @@ export const deleteTask = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Update task status (User or Admin)
+// @route   PATCH /api/tasks/:id/status
+// @access  Private
+export const updateTaskStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    if (!['Not Started', 'In Progress', 'Completed', 'Blocked'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // A regular user can only update tasks assigned to them. Admins can update any.
+    if (req.user.role !== 'admin' && String(task.assignedTo) !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to change this task status' });
+    }
+
+    task.status = status;
+    
+    // Auto-record the exact completion date/time
+    if (status === 'Completed') {
+      task.endTime = new Date();
+    } else {
+      task.endTime = null; // Re-open task if changed away from Completed
+    }
+
+    await task.save();
+
+    res.json(task);
+  } catch (error) {
+    next(error);
+  }
+};

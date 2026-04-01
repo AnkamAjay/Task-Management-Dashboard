@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './TaskCard.css';
 import { useTimer } from '../contexts/TimerContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const PRIORITY_CONFIG = {
   High: { label: 'High', className: 'priority-high', icon: '🔴' },
@@ -40,7 +43,64 @@ function TaskCard({ task }) {
   const overdue = isOverdue(task.deadline);
   
   const { activeEntry, elapsed, startTimer, stopTimer } = useTimer();
-  const isRunning = activeEntry?.task?.id === task.id;
+  const { token, user } = useAuth();
+  
+  const [localStatus, setLocalStatus] = useState(task.status);
+  
+  // Sync status if parent prop updates
+  useEffect(() => {
+    setLocalStatus(task.status);
+  }, [task.status]);
+  
+  // Handle both populated task { id, name } and unpopulated task (string ID) from recent API response
+  const activeTaskId = typeof activeEntry?.task === 'object' ? activeEntry.task?.id : activeEntry?.task;
+  const isRunning = activeTaskId === String(task.id);
+  
+  // Ownership check: does the logged-in user own this task?
+  const assignedUserId = typeof task.assignedTo === 'object' && task.assignedTo !== null 
+    ? task.assignedTo.id || task.assignedTo._id 
+    : task.assignedTo;
+  const isOwner = assignedUserId && user && String(assignedUserId) === String(user.id);
+  
+  // If timer is suddenly running, auto-promote to In Progress visually
+  useEffect(() => {
+    if (isRunning && localStatus === 'Not Started') {
+      setLocalStatus('In Progress');
+    }
+  }, [isRunning, localStatus]);
+
+  const isEffectivelyOverdue = overdue && localStatus !== 'Completed';
+
+  // Force stop the timer immediately if the deadline crossover occurs while running
+  useEffect(() => {
+    if (isEffectivelyOverdue && isRunning) {
+      stopTimer();
+    }
+  }, [isEffectivelyOverdue, isRunning, stopTimer]);
+
+  const handleStatusChange = async (e) => {
+    const newStatus = e.target.value;
+    const oldStatus = localStatus;
+    setLocalStatus(newStatus); // Optimistic UI update
+    
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      await axios.patch(
+        `${API_BASE}/api/tasks/${task.id}/status`, 
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // If marked Completed, and timer is running, stop the timer auto!
+      if (newStatus === 'Completed' && isRunning) {
+         stopTimer();
+      }
+    } catch (err) {
+      console.error(err);
+      setLocalStatus(oldStatus); // Revert
+      alert('Failed to update status');
+    }
+  };
 
   return (
     <div className={`task-row ${priority.className} ${overdue ? 'overdue' : ''}`}>
@@ -86,19 +146,53 @@ function TaskCard({ task }) {
         )}
 
         <div className="task-badges">
-          {overdue && <span className="overdue-badge">Overdue</span>}
-          {task.status && (
-            <span className={`status-chip ${STATUS_CONFIG[task.status]?.className}`}>
-              {STATUS_CONFIG[task.status]?.icon} {task.status}
-            </span>
+          {overdue && localStatus !== 'Completed' && <span className="overdue-badge">Overdue</span>}
+          {localStatus && (
+            <select
+              className={`status-chip ${STATUS_CONFIG[localStatus]?.className}`}
+              value={localStatus}
+              onChange={handleStatusChange}
+              disabled={isEffectivelyOverdue}
+              style={{
+                fontFamily: 'inherit',
+                fontSize: '0.65rem',
+                padding: '2px 8px',
+                margin: '0',
+                cursor: isEffectivelyOverdue ? 'not-allowed' : 'pointer',
+                outline: 'none',
+                appearance: 'none',   // Removes default dropdown arrow
+                border: '1px solid transparent',
+                opacity: isEffectivelyOverdue ? 0.6 : 1,
+              }}
+              title={isEffectivelyOverdue ? "Locked (Overdue)" : "Click to update task status"}
+            >
+              {Object.keys(STATUS_CONFIG).map(s => (
+                <option key={s} value={s} style={{ color: '#fff', background: '#333' }}>
+                  {STATUS_CONFIG[s].icon} {s}
+                </option>
+              ))}
+            </select>
           )}
         </div>
-        <button 
-          className={`timer-btn ${isRunning ? 'running' : 'stopped'}`}
-          onClick={() => isRunning ? stopTimer() : startTimer(task.id)}
-        >
-          {isRunning ? `⏹ Stop ${formatDuration(elapsed)}` : '▶ Start Timer'}
-        </button>
+        
+        {isOwner && (
+          localStatus === 'Completed' ? (
+            <button className="timer-btn stopped" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+              ✔ Completed
+            </button>
+          ) : isEffectivelyOverdue ? (
+            <button className="timer-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed', color: '#ff7b72', background: 'rgba(248, 81, 73, 0.1)', borderColor: 'rgba(248, 81, 73, 0.4)' }}>
+              🔒 Deadline Passed
+            </button>
+          ) : (
+            <button 
+              className={`timer-btn ${isRunning ? 'running' : 'stopped'}`}
+              onClick={() => isRunning ? stopTimer() : startTimer(task.id)}
+            >
+              {isRunning ? `⏹ Stop ${formatDuration(elapsed)}` : '▶ Start Timer'}
+            </button>
+          )
+        )}
       </div>
 
       <div className="col-assigned">
@@ -128,17 +222,28 @@ function TaskCard({ task }) {
 
       <div className="col-notes">
         {task.notes ? (
-          <a
-            href={task.notes.downloadUrl}
-            download={task.notes.fileName}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="download-btn"
-            title={`Download ${task.notes.fileName}`}
-          >
-            <span className="download-icon">⬇</span>
-            <span className="file-name">{task.notes.fileName}</span>
-          </a>
+          isEffectivelyOverdue ? (
+            <span 
+              className="download-btn" 
+              style={{ opacity: 0.5, cursor: 'not-allowed', color: '#8b949e', borderColor: '#8b949e' }} 
+              title="Attachment locked (Deadline passed)"
+            >
+              <span className="download-icon">🔒</span>
+              <span className="file-name">{task.notes.fileName}</span>
+            </span>
+          ) : (
+            <a
+              href={task.notes.downloadUrl}
+              download={task.notes.fileName}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="download-btn"
+              title={`Download ${task.notes.fileName}`}
+            >
+              <span className="download-icon">⬇</span>
+              <span className="file-name">{task.notes.fileName}</span>
+            </a>
+          )
         ) : (
           <span className="no-attachment">No file</span>
         )}

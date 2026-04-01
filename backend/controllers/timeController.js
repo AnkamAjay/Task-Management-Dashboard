@@ -32,6 +32,11 @@ export const startTimer = async (req, res, next) => {
       hourlyRate: fullUser ? (fullUser.hourlyRate || 0) : 0
     });
 
+    if (taskObj.status === 'Not Started') {
+      taskObj.status = 'In Progress';
+      await taskObj.save();
+    }
+
     res.status(201).json({ message: 'Timer started', entry: newEntry, previousStopped: !!activeTimer });
   } catch (error) {
     next(error);

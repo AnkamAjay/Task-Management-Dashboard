@@ -18,9 +18,9 @@ env_variables:
   # Do NOT put real secrets here.
   # Replace these placeholders before deploying.
   # Use Secret Manager or Cloud Run env vars for real values.
-  MONGO_URI: "REPLACE_WITH_MONGODB_URI"
-  JWT_SECRET: "REPLACE_WITH_LONG_RANDOM_STRING"
-  ADMIN_SECRET: "REPLACE_WITH_ADMIN_SECRET"
+  MONGO_URI: "<YOUR_MONGODB_URI>"
+  JWT_SECRET: "<YOUR_STRONG_JWT_SECRET>"
+  ADMIN_SECRET: "<YOUR_STRONG_ADMIN_SECRET_KEY>"
   JWT_EXPIRES_IN: "1d"
   CLIENT_URL: "https://intern-projects-490611.el.r.appspot.com"
 

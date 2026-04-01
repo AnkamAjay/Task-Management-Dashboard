@@ -170,7 +170,8 @@ export default function Timesheet() {
 
     entries.forEach(entry => {
       if (!entry.task) return;
-      const taskId = entry.task._id || entry.task;
+      // Extract the correct string ID whether it's a raw string or a populated object
+      const taskId = entry.task.id || entry.task._id || entry.task;
       const taskName = entry.task.taskName || 'Unknown Task';
 
       if (!taskMap[taskId]) {

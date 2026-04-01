@@ -18,7 +18,7 @@ export const verifyToken = (req, res, next) => {
 
       next(); // Move to the actual route handler
     } catch (error) {
-      console.error(error);
+      console.warn('JWT verification failed:', error.message);
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }

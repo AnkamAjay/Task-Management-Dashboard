@@ -1,5 +1,5 @@
 import express from 'express';
-import { getTasks, getTask, createTask, updateTask, deleteTask } from '../controllers/taskController.js';
+import { getTasks, getTask, createTask, updateTask, deleteTask, updateTaskStatus } from '../controllers/taskController.js';
 import { verifyToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.use(verifyToken);
 // GET routes (open to all authenticated users)
 router.get('/', getTasks);
 router.get('/:id', getTask);
+router.patch('/:id/status', updateTaskStatus);
 
 // POST/PUT/DELETE routes (restricted to admins only)
 router.post('/', requireAdmin, createTask);

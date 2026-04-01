@@ -25,7 +25,7 @@ function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, 
       </div>
 
       <div className="navbar-controls">
-        {onSearchChange && (
+        {onSearchChange && user?.role !== 'admin' && (
           <div className="search-wrapper">
             <span className="search-icon">🔍</span>
             <input
