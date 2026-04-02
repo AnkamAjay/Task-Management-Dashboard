@@ -89,6 +89,19 @@ A full-stack task management application with time tracking, project grouping, b
 - Tags shown as chips on task cards
 - Filter tasks by tag on the dashboard
 
+### Task Status Updates
+- Users can update the status of tasks assigned to them directly from the dashboard
+- Inline status dropdown on each task card (Not Started / In Progress / Completed / Blocked)
+- Deadline lockout — timer and status are locked once a task's deadline passes
+- Timer auto-promotes task to "In Progress" when started
+- Timer auto-stops when task is marked Completed
+
+### Onboarding & Help
+- **Admin onboarding checklist** — shown on first login when no projects/tasks exist; guides through: Create Project → Register Users → Create Task; auto-ticks steps as they are completed; dismissible
+- **User welcome tips** — shown to new regular users with no tasks assigned; explains timer, status updates, and timesheet submission; dismissible
+- **Help page** (`/help`) — role-aware guide accessible from the navbar; admin sees full setup guide + feature cards; regular users see feature cards only
+- **Improved empty states** — admin empty state links directly to Admin Panel; user empty state prompts to contact admin
+
 ---
 
 ## Local Development
@@ -148,6 +161,7 @@ npm run dev            # Frontend on http://localhost:5173
 | POST | `/api/tasks` | Admin | Create task |
 | PUT | `/api/tasks/:id` | Admin | Update task |
 | DELETE | `/api/tasks/:id` | Admin | Delete task |
+| PATCH | `/api/tasks/:id/status` | Private | Update task status (owner or admin) |
 
 Query params: `?project=`, `?tag=`, `?assignedTo=`
 
@@ -227,7 +241,7 @@ The Express server serves the React `dist/` as static files and handles all `/ap
 ├── src/
 │   ├── components/               # React components
 │   ├── contexts/                 # AuthContext, TimerContext
-│   └── pages/                    # Dashboard, Timesheet, Analytics, Login, Register
+│   └── pages/                    # Dashboard, Timesheet, Analytics, Help, Login, Register
 ├── app.yaml                      # App Engine config
 ├── package.json
 └── vite.config.js
