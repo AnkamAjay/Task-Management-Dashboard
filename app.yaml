@@ -18,10 +18,42 @@ env_variables:
   # Do NOT put real secrets here.
   # Replace these placeholders before deploying.
   # Use Secret Manager or Cloud Run env vars for real values.
-  MONGO_URI: "<YOUR_MONGODB_URI>"
-  JWT_SECRET: "<YOUR_STRONG_JWT_SECRET>"
-  ADMIN_SECRET: "<YOUR_STRONG_ADMIN_SECRET_KEY>"
+  MONGO_URI: "YOUR_PRODUCTION_MONGO_URI"
+  JWT_SECRET: "YOUR_PRODUCTION_JWT_SECRET"
+  ADMIN_SECRET: "YOUR_PRODUCTION_ADMIN_SECRET"
   JWT_EXPIRES_IN: "1d"
   CLIENT_URL: "https://intern-projects-490611.el.r.appspot.com"
 
+handlers:
+  # Serve all files in dist/assets/ directly
+  - url: /assets
+    static_dir: dist/assets
 
+  # Serve Admin index.html specifically when they hit /admin or /admin/
+  - url: /admin/?$
+    static_files: dist/admin/index.html
+    upload: dist/admin/index.html
+
+  # Serve all other files in dist/admin/ directly
+  - url: /admin/(.*)
+    static_files: dist/admin/\1
+    upload: dist/admin/.*
+
+  # Serve root files from dist/ (favicon, icons, etc.)
+  - url: /(.*\.(svg|png|ico|json|txt|xml))$
+    static_files: dist/\1
+    upload: dist/.*\.(svg|png|ico|json|txt|xml)$
+
+  # Serve index.html for the root path directly
+  - url: /
+    static_files: dist/index.html
+    upload: dist/index.html
+
+  # Send all /api/ requests to the Node.js backend
+  - url: /api/.*
+    script: auto
+
+  # ALL OTHER ROUTES (e.g. /dashboard) serve the React app index.html
+  - url: /.*
+    static_files: dist/index.html
+    upload: dist/index.html

@@ -60,14 +60,18 @@ function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, 
       </div>
 
       <div className="navbar-meta">
-        <div className="task-count">
-          <span className="count-badge">{taskCount}</span>
-          <span>tasks</span>
-        </div>
-        <div className="refresh-info">
-          <span className="pulse-dot" style={{ display: lastUpdated ? 'inline-block' : 'none' }}></span>
-          <span>{lastUpdated ? `Updated ${formattedTime}` : 'Not Polling'}</span>
-        </div>
+        {taskCount !== undefined && (
+          <div className="task-count">
+            <span className="count-badge">{taskCount}</span>
+            <span>tasks</span>
+          </div>
+        )}
+        {taskCount !== undefined && (
+          <div className="refresh-info">
+            <span className="pulse-dot" style={{ display: lastUpdated ? 'inline-block' : 'none' }}></span>
+            <span>{lastUpdated ? `Updated ${formattedTime}` : 'Not Polling'}</span>
+          </div>
+        )}
 
         <button className="admin-link-btn" onClick={() => navigate('/')}>📊 Dashboard</button>
         <button className="admin-link-btn" onClick={() => navigate('/timesheet')}>🕒 Timesheet</button>

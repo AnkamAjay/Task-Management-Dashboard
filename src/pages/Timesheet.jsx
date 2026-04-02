@@ -88,15 +88,19 @@ export default function Timesheet() {
 
   const fetchSubmissionStatus = useCallback(async () => {
     try {
-      // Fetch current user's submission for this week
-      const res = await axios.get(`${API_BASE}/api/timesheets`, { headers: authHeader });
+      let queryUrl = `${API_BASE}/api/timesheets`;
+      if (user?.role === 'admin') {
+        queryUrl += `?userId=${selectedUser === 'me' ? user.id : selectedUser}`;
+      }
+      
+      const res = await axios.get(queryUrl, { headers: authHeader });
       const weekStart = formatISO(monday);
       const match = res.data.find(ts => formatISO(new Date(ts.weekStart)) === weekStart);
       setWeekSubmission(match || null);
     } catch (err) {
       console.error('Failed to fetch submission status', err);
     }
-  }, [monday, token]);
+  }, [monday, selectedUser, user, token]);
 
   const fetchPendingSubmissions = useCallback(async () => {
     if (user?.role !== 'admin') return;
@@ -216,7 +220,7 @@ export default function Timesheet() {
                     <option value="me">My Timesheet</option>
                     <optgroup label="Team Members">
                       {users.map(u => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
+                        <option key={u._id || u.id} value={u._id || u.id}>{u.name}</option>
                       ))}
                     </optgroup>
                   </select>

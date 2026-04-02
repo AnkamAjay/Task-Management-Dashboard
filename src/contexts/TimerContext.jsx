@@ -82,6 +82,7 @@ export const TimerProvider = ({ children }) => {
 
   const stopTimer = async () => {
     if (!activeEntry) return;
+    if (activeEntry.id === 'temp-loading') return; // Prevent stopping before the start API completes
 
     // 1. Save previous state for rollback
     const previousEntry = activeEntry;

@@ -51,14 +51,9 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/timesheets', timesheetRoutes);
 
-// Serve React production build
-app.use(express.static(path.join(__dirname, '../dist')));
+// Serve React production build handled by app.yaml handlers
+// No additional static serving code needed here.
 
-// Catch-all: for any non-API route, serve React's index.html
-// This supports client-side routing (e.g. /login, /register)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
 
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {
