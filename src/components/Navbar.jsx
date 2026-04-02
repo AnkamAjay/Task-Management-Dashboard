@@ -69,12 +69,12 @@ function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, 
           <span>{lastUpdated ? `Updated ${formattedTime}` : 'Not Polling'}</span>
         </div>
 
-        <button className="admin-link-btn" onClick={() => navigate('/')} style={{ background: 'transparent' }}>📊 Dashboard</button>
-        <button className="admin-link-btn" onClick={() => navigate('/timesheet')} style={{ background: 'transparent', marginLeft: '10px' }}>🕒 Timesheet</button>
-        <button className="admin-link-btn" onClick={() => navigate('/analytics')} style={{ background: 'transparent', marginLeft: '10px' }}>📈 Reports</button>
+        <button className="admin-link-btn" onClick={() => navigate('/')}>📊 Dashboard</button>
+        <button className="admin-link-btn" onClick={() => navigate('/timesheet')}>🕒 Timesheet</button>
+        <button className="admin-link-btn" onClick={() => navigate('/analytics')}>📈 Reports</button>
 
         {user?.role === 'admin' && (
-          <a href="/admin/" className="admin-link-btn" style={{ marginLeft: '10px' }}>⚙️ Admin Panel</a>
+          <a href="/admin/" className="admin-link-btn">⚙️ Admin Panel</a>
         )}
 
         <div className="user-section">
