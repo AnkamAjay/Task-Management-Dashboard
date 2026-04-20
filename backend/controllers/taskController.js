@@ -127,8 +127,11 @@ export const deleteTask = async (req, res, next) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    // Cleanup: Delete orphaned comments associated with this task
-    await Comment.deleteMany({ task: req.params.id });
+    // Cleanup: Delete orphaned comments and time entries associated with this task
+    await Promise.all([
+      Comment.deleteMany({ task: req.params.id }),
+      TimeEntry.deleteMany({ task: req.params.id })
+    ]);
 
     res.json({ message: 'Task deleted successfully' });
   } catch (error) {
