@@ -29,14 +29,14 @@ for (const key of REQUIRED_ENV) {
 }
 
 // Connect to MongoDB
-await connectDB();
+connectDB();
 
 const app = express();
 
 // Middleware
 app.use(express.json({ limit: '10mb' })); // Parses incoming JSON requests; limit prevents oversized payload attacks
 
-// Relaxed CORS for local development to handle shifting Vite ports (5173, 5174, 5175, 5176)
+// Hardened CORS for production and specific local dev ports
 const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:5173',
@@ -48,7 +48,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

@@ -22,8 +22,8 @@ export const addComment = async (req, res, next) => {
       task: taskId,
       user: req.user.id,
       text,
-      type: type || 'comment',
-      metadata
+      type: 'comment',
+      metadata: undefined // Internal only, prevent forgery
     });
 
     const populatedComment = await Comment.findById(comment._id).populate('user', 'name');
@@ -51,7 +51,8 @@ export const getComments = async (req, res, next) => {
 
     const comments = await Comment.find({ task: taskId })
       .populate('user', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(100);
 
     res.json(comments);
   } catch (error) {

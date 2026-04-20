@@ -168,7 +168,7 @@ async function handleSubmit(e) {
       .filter(Boolean),
   };
 
-  const adminNote = document.getElementById('taskNotes').value.trim();
+  const initialActivityComment = document.getElementById('adminActivityComment').value.trim();
 
   // Only include notes if both fields are filled — never send null
   if (fileName && downloadUrl) {
@@ -185,13 +185,13 @@ async function handleSubmit(e) {
       showToast('✅ Task added successfully!', 'success');
     }
 
-    // If there's an admin note, post it as a comment
-    if (adminNote) {
+    // If there's an initial activity comment, post it
+    if (initialActivityComment) {
       const taskId = id || result.id || result._id;
       await fetch(`${API_BASE}/api/comments/${taskId}`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ text: adminNote })
+        body: JSON.stringify({ text: initialActivityComment })
       });
     }
 
@@ -242,6 +242,9 @@ function resetForm() {
   document.getElementById('formTitle').textContent = '➕ Add New Task';
   document.getElementById('submitBtn').innerHTML = '<span>➕ Add Task</span>';
   document.getElementById('cancelEditBtn').classList.add('hidden');
+  // Clear the activity comment as well
+  const commentField = document.getElementById('adminActivityComment');
+  if (commentField) commentField.value = '';
 }
 
 function toDatetimeLocal(str) {
@@ -312,8 +315,8 @@ function buildTaskCard(task) {
           ${overdue ? '<span class="overdue-tag">OVERDUE</span>' : ''}
         </div>
         <div class="task-card-actions">
-          <button class="edit-btn" onclick="startEdit('${task.id}')" title="Edit task">✏️ Edit</button>
-          <button class="delete-btn" onclick="openDeleteModal('${task.id}', '${escapeHtml(task.taskName)}')" title="Delete task">🗑️ Delete</button>
+          <button class="edit-btn" data-task-id="${task.id}" title="Edit task">✏️ Edit</button>
+          <button class="delete-btn" data-task-id="${task.id}" data-task-name="${escapeHtml(task.taskName)}" title="Delete task">🗑️ Delete</button>
         </div>
       </div>
       <div class="task-card-meta">
@@ -325,7 +328,7 @@ function buildTaskCard(task) {
           <span class="meta-label">Priority</span>
           <span class="priority-badge ${priorityClass}">${priorityIcon} ${task.priority}</span>
           ${task.isBillable ? '<span class="priority-badge" style="background:#10b981; color:#fff">💰 Billable</span>' : ''}
-          <button class="admin-activity-btn" onclick="toggleAdminActivity('${task.id}')">💬 Activity</button>
+          <button class="admin-activity-btn" data-task-id="${task.id}">💬 Activity</button>
         </div>
         <div class="meta-item">
           <span class="meta-label">Start</span>
@@ -405,7 +408,7 @@ function renderAdminActivity(taskId, activities) {
     </div>
     <div class="admin-comment-form">
       <input type="text" id="comment-input-${taskId}" placeholder="Add a comment..." class="admin-comment-input">
-      <button onclick="postAdminComment('${taskId}')" class="admin-comment-btn">Post</button>
+      <button class="admin-post-comment-btn" data-task-id="${taskId}">Post</button>
     </div>
   `;
   panel.innerHTML = html;
@@ -491,26 +494,30 @@ function showToast(msg, type = 'success') {
   }
 }
 
-// ─── Event Listeners ────────────────────────────────────────────────────────
+// Event Delegation for Task Actions
+const listEl = document.getElementById('taskList');
+if (listEl) {
+  listEl.addEventListener('click', function(e) {
+    const target = e.target;
+    const taskId = target.getAttribute('data-task-id');
 
-const overlayEl = document.getElementById('modalOverlay');
-if (overlayEl) {
-  overlayEl.addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+    if (target.classList.contains('edit-btn')) {
+      startEdit(taskId);
+    } else if (target.classList.contains('delete-btn')) {
+      const taskName = target.getAttribute('data-task-name');
+      openDeleteModal(taskId, taskName);
+    } else if (target.classList.contains('admin-activity-btn')) {
+      toggleAdminActivity(taskId);
+    } else if (target.classList.contains('admin-post-comment-btn')) {
+      postAdminComment(taskId);
+    }
   });
 }
 
-// Note: taskForm, searchInput, and filterPriority are handled via inline 
-// attributes (onsubmit, oninput, onchange) in index.html.
-
-// Expose functions to window for onclick handlers
-window.toggleAdminActivity = toggleAdminActivity;
-window.postAdminComment = postAdminComment;
-window.startEdit = startEdit;
-window.openDeleteModal = openDeleteModal;
-window.confirmDelete = confirmDelete;
+// Expose functions to window for onclick handlers that are still in HTML (like modals/header)
 window.logout = logout;
 window.closeModal = closeModal;
 window.cancelEdit = cancelEdit;
+window.confirmDelete = confirmDelete;
 
 init();
