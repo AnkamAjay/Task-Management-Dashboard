@@ -21,6 +21,7 @@ function NotificationDropdown({ notifications, onNotificationUpdate, onClose }) 
       case 'task_assigned': return '📌';
       case 'timesheet_approved': return '✅';
       case 'timesheet_rejected': return '❌';
+      case 'timesheet_submitted': return '📩';
       case 'deadline_approaching': return '⏰';
       default: return '📢';
     }

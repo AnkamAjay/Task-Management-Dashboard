@@ -1,4 +1,5 @@
 import WeeklyTimesheet from '../models/WeeklyTimesheet.js';
+import User from '../models/User.js';
 import { createInternalNotification } from './notificationController.js';
 
 // @desc    Submit a weekly timesheet for approval
@@ -29,6 +30,16 @@ export const submitTimesheet = async (req, res, next) => {
       },
       { upsert: true, new: true, runValidators: true }
     );
+
+    // Trigger notification for all admins
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      await createInternalNotification(
+        admin._id,
+        `User ${req.user.name} has submitted a timesheet for week starting ${start.toLocaleDateString()}.`,
+        'timesheet_submitted'
+      );
+    }
 
     res.status(201).json(timesheet);
   } catch (error) {
