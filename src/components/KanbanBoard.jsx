@@ -18,12 +18,27 @@ const PRIORITY_CONFIG = {
   Low: { className: 'priority-low', icon: '🟢' },
 };
 
+function isOverdue(deadlineStr) {
+  if (!deadlineStr) return false;
+  return new Date(deadlineStr) < new Date();
+}
+
 function KanbanCard({ task, onStatusChange }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [localStatus, setLocalStatus] = useState(task.status);
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.Low;
+  const overdue = isOverdue(task.deadline);
+  const isEffectivelyOverdue = overdue && task.status !== 'Completed';
+
+  // Ownership check: does the logged-in user own this task?
+  const assignedUserId = typeof task.assignedTo === 'object' && task.assignedTo !== null 
+    ? (task.assignedTo.id || task.assignedTo._id) 
+    : task.assignedTo;
+  const isOwner = assignedUserId && user && String(assignedUserId) === String(user.id);
+  const canUpdateStatus = (isOwner || user?.role === 'admin') && !isEffectivelyOverdue;
 
   const handleStatusChange = async (e) => {
+    if (!canUpdateStatus) return;
     const newStatus = e.target.value;
     const oldStatus = localStatus;
     setLocalStatus(newStatus);
@@ -49,7 +64,7 @@ function KanbanCard({ task, onStatusChange }) {
   };
 
   return (
-    <div className={`kanban-card ${priority.className}`}>
+    <div className={`kanban-card ${priority.className} ${overdue && localStatus !== 'Completed' ? 'overdue' : ''}`}>
       <div className="kanban-card-header">
         {task.project && (
           <span className="kanban-project-badge" style={{ background: task.project.color }}>
@@ -61,7 +76,20 @@ function KanbanCard({ task, onStatusChange }) {
         </span>
       </div>
       
-      <h4 className="kanban-task-name">{task.taskName}</h4>
+      <div className="kanban-task-body">
+        <h4 className="kanban-task-name">{task.taskName}</h4>
+        {task.isBillable && (
+          <span className="kanban-billable-badge" title="Billable Task">$</span>
+        )}
+      </div>
+
+      {task.tags && task.tags.length > 0 && (
+        <div className="kanban-tags">
+          {task.tags.map(tag => (
+            <span key={tag} className="kanban-tag-chip">{tag}</span>
+          ))}
+        </div>
+      )}
       
       <div className="kanban-card-footer">
         <div className="kanban-assignee">
@@ -70,7 +98,7 @@ function KanbanCard({ task, onStatusChange }) {
           </div>
           <span className="kanban-assignee-name">{task.assignedTo?.name || 'Unassigned'}</span>
         </div>
-        <div className="kanban-deadline" title="Deadline">
+        <div className={`kanban-deadline ${overdue && localStatus !== 'Completed' ? 'overdue-text' : ''}`} title="Deadline">
           📅 {formatDate(task.deadline)}
         </div>
       </div>
@@ -80,6 +108,8 @@ function KanbanCard({ task, onStatusChange }) {
           className={`kanban-status-select ${STATUS_CONFIG[localStatus]?.className}`}
           value={localStatus}
           onChange={handleStatusChange}
+          disabled={!canUpdateStatus}
+          title={isEffectivelyOverdue ? "Locked (Overdue)" : !canUpdateStatus ? "Not authorized" : "Update status"}
         >
           {STATUS_COLUMNS.map(s => (
             <option key={s} value={s}>{STATUS_CONFIG[s].icon} {s}</option>

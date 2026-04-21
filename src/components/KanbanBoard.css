@@ -120,12 +120,49 @@
   white-space: nowrap;
 }
 
+.kanban-task-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .kanban-task-name {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.4;
+  flex: 1;
+}
+
+.kanban-billable-badge {
+  background: #10b981;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kanban-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kanban-tag-chip {
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
 }
 
 .kanban-card-footer {
@@ -133,6 +170,23 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 4px;
+}
+
+/* Overdue States */
+.kanban-card.overdue {
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  background: rgba(248, 81, 73, 0.02);
+}
+
+.kanban-deadline.overdue-text {
+  color: #ff7b72;
+  font-weight: 600;
+}
+
+.kanban-status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--bg-hover);
 }
 
 .kanban-assignee {
