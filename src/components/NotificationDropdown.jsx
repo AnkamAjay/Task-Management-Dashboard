@@ -1,5 +1,3 @@
-import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
 function NotificationDropdown({ notifications, onMarkAsRead, onClose }) {
