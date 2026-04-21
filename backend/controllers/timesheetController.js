@@ -1,4 +1,5 @@
 import WeeklyTimesheet from '../models/WeeklyTimesheet.js';
+import { createInternalNotification } from './notificationController.js';
 
 // @desc    Submit a weekly timesheet for approval
 // @route   POST /api/timesheets/submit
@@ -79,7 +80,11 @@ export const approveTimesheet = async (req, res, next) => {
     timesheet.reviewedBy = req.user.id;
     timesheet.adminNote = '';
     await timesheet.save();
-
+    await createInternalNotification(
+      timesheet.user,
+      `Your timesheet for week starting ${new Date(timesheet.weekStart).toLocaleDateString()} was approved.`,
+      'timesheet_approved'
+    );
     res.json(timesheet);
   } catch (error) {
     next(error);
@@ -103,7 +108,11 @@ export const rejectTimesheet = async (req, res, next) => {
     timesheet.reviewedBy = req.user.id;
     timesheet.adminNote = adminNote || '';
     await timesheet.save();
-
+    await createInternalNotification(
+      timesheet.user,
+      `Your timesheet for week starting ${new Date(timesheet.weekStart).toLocaleDateString()} was rejected. Note: ${adminNote || 'No note provided.'}`,
+      'timesheet_rejected'
+    );
     res.json(timesheet);
   } catch (error) {
     next(error);

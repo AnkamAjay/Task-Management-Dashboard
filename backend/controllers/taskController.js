@@ -2,6 +2,7 @@ import Task from '../models/Task.js';
 import TimeEntry from '../models/TimeEntry.js';
 import Comment from '../models/Comment.js';
 import { logActivity } from './commentController.js';
+import { createInternalNotification } from './notificationController.js';
 
 // @desc    Get all tasks
 // @route   GET /api/tasks
@@ -89,6 +90,13 @@ export const createTask = async (req, res, next) => {
     }
 
     const task = await Task.create(taskData);
+    if (task.assignedTo) {
+      await createInternalNotification(
+        task.assignedTo,
+        `New task assigned: ${task.taskName}`,
+        'task_assigned'
+      );
+    }
     res.status(201).json(task);
   } catch (error) {
     next(error);
@@ -109,7 +117,13 @@ export const updateTask = async (req, res, next) => {
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-
+    if (req.body.assignedTo && String(req.body.assignedTo) !== String(task.assignedTo)) {
+      await createInternalNotification(
+        req.body.assignedTo,
+        `Task reassigned to you: ${task.taskName}`,
+        'task_assigned'
+      );
+    }
     res.json(task);
   } catch (error) {
     next(error);
