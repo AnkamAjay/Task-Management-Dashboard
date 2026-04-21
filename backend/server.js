@@ -86,11 +86,20 @@ const checkDeadlines = async () => {
     });
 
     for (const task of tasks) {
-      await createInternalNotification(
-        task.assignedTo,
-        `Deadline approaching for task: ${task.taskName}`,
-        'deadline_approaching'
-      );
+      // Deduplicate: Check if a notification already exists for this task
+      const existingNotif = await Notification.findOne({
+        taskId: task._id,
+        type: 'deadline_approaching'
+      });
+
+      if (!existingNotif) {
+        await createInternalNotification(
+          task.assignedTo,
+          `Deadline approaching for task: ${task.taskName}`,
+          'deadline_approaching',
+          task._id
+        );
+      }
     }
   } catch (error) {
     console.error('Task deadline background check failed:', error);

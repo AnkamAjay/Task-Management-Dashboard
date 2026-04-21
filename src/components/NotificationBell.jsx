@@ -40,16 +40,35 @@ function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const toggleDropdown = () => setShowDropdown(!showDropdown);
+
+  const handleMarkAsRead = async (id) => {
+    // Optimistic update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+
+    try {
+      await axios.patch(`${API_BASE}/api/notifications/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('Mark as read error:', err);
+      // Rollback on error
+      fetchNotifications();
+    }
+  };
+
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
-      <button className="bell-btn" onClick={() => setShowDropdown(!showDropdown)}>
+      <button className="bell-btn" onClick={toggleDropdown} title="Notifications">
         <span className="bell-icon">🔔</span>
         {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
       </button>
+      
       {showDropdown && (
         <NotificationDropdown 
           notifications={notifications} 
-          onNotificationUpdate={fetchNotifications}
+          onMarkAsRead={handleMarkAsRead}
           onClose={() => setShowDropdown(false)}
         />
       )}

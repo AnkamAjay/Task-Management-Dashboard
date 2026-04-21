@@ -94,7 +94,8 @@ export const createTask = async (req, res, next) => {
       await createInternalNotification(
         task.assignedTo,
         `New task assigned: ${task.taskName}`,
-        'task_assigned'
+        'task_assigned',
+        task.id
       );
     }
     res.status(201).json(task);
@@ -108,22 +109,27 @@ export const createTask = async (req, res, next) => {
 // @access  Private/Admin
 export const updateTask = async (req, res, next) => {
   try {
+    const originalTask = await Task.findById(req.params.id);
+    if (!originalTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true } // Returns the updated document
     );
 
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-    if (req.body.assignedTo && String(req.body.assignedTo) !== String(task.assignedTo)) {
+    // Trigger notification if reassigned
+    if (req.body.assignedTo && String(req.body.assignedTo) !== String(originalTask.assignedTo)) {
       await createInternalNotification(
         req.body.assignedTo,
         `Task reassigned to you: ${task.taskName}`,
-        'task_assigned'
+        'task_assigned',
+        task.id
       );
     }
+
     res.json(task);
   } catch (error) {
     next(error);

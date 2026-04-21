@@ -11,15 +11,6 @@ export const getMyNotifications = async (req, res, next) => {
   }
 };
 
-export const createNotification = async (req, res, next) => {
-  try {
-    const notification = await Notification.create(req.body);
-    res.status(201).json(notification);
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const markAsRead = async (req, res, next) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -33,9 +24,12 @@ export const markAsRead = async (req, res, next) => {
   }
 };
 
-export const createInternalNotification = async (userId, message, type) => {
+// Utility function for internal use (doesn't need req/res)
+export const createInternalNotification = async (userId, message, type, taskId = null) => {
   try {
-    await Notification.create({ userId, message, type });
+    const data = { userId, message, type };
+    if (taskId) data.taskId = taskId;
+    await Notification.create(data);
   } catch (error) {
     console.error('Error creating internal notification:', error);
   }

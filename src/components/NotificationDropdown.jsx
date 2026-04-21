@@ -2,20 +2,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
-
-function NotificationDropdown({ notifications, onNotificationUpdate, onClose }) {
-  const { token } = useAuth();
-  const markAsRead = async (id) => {
-    try {
-      await axios.patch(`${API_BASE}/api/notifications/${id}/read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      onNotificationUpdate();
-    } catch (err) {
-      console.error('Mark as read error:', err);
-    }
-  };
+function NotificationDropdown({ notifications, onMarkAsRead, onClose }) {
   const getIcon = (type) => {
     switch (type) {
       case 'task_assigned': return '📌';
@@ -37,7 +24,7 @@ function NotificationDropdown({ notifications, onNotificationUpdate, onClose }) 
           <div className="empty-notifications">No new notifications</div>
         ) : (
           notifications.map(notification => (
-            <div key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`} onClick={() => !notification.read && markAsRead(notification.id)}>
+            <div key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`} onClick={() => !notification.read && onMarkAsRead(notification.id)}>
               <div className="notification-icon">{getIcon(notification.type)}</div>
               <div className="notification-content">
                 <p className="notification-message">{notification.message}</p>
