@@ -42,5 +42,15 @@ This document serves as the final verification checklist for all features implem
 - [ ] **Dynamic Charts**: Log billable and non-billable hours. Verify the Pie Chart reflects the correct distribution.
 - [ ] **CSV Export**: Click the Export button. Verify the downloaded file contains accurate time entry logs.
 
+## 8. Onboarding & Help
+- [ ] **Admin Onboarding**: Log in as a new Admin with no projects. Verify the **Onboarding Checklist** appears and ticks off steps as you complete them.
+- [ ] **User Welcome Tips**: Log in as a new User with no tasks. Verify the **Welcome Tips** appear to guide you.
+- [ ] **Help Center**: Navigate to `/help`. Verify the role-aware instructions appear (Admins get more setup steps than regular users).
+
+## 9. Admin Tools (Project & User Management)
+- [ ] **Project CRUD**: Create, Edit, and Delete a Project in the Admin Panel. Verify the color picker works and updates throughout the app.
+- [ ] **Billing Rates**: Set a custom hourly billing rate for a user in the Admin Panel.
+- [ ] **Rate Persistence**: Start a timer for that user. Verify the `earnedAmount` is calculated using the custom rate you set.
+
 ---
 **Status:** All tests must be marked [x] before final deployment.
