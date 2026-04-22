@@ -27,6 +27,8 @@ A full-stack task management application with time tracking, project grouping, b
 - View tasks assigned to you (regular users see only their own; admins see all)
 - Filter by project, tag, and priority
 - Search by task name or assigned person
+- **Security & RBAC**: Strict role-based access control prevents regular users from accessing tasks not assigned to them (IDOR Protection)
+- **JWT-Protected API**: All endpoints require cryptographically signed tokens for identity verification
 - Select between List View and Kanban Board View
 - Auto-sort by deadline then priority
 - Overdue task highlighting
@@ -96,6 +98,7 @@ A full-stack task management application with time tracking, project grouping, b
 - Users can update the status of tasks assigned to them directly from the dashboard
 - Inline status dropdown on each task card (Not Started / In Progress / Completed / Blocked)
 - Deadline lockout — timer and status are locked once a task's deadline passes
+- **Status Activity Log**: Every status change is logged with the user ID, timestamp, and "Before/After" state for administrative auditing
 - Timer auto-promotes task to "In Progress" when started
 - Timer auto-stops when task is marked Completed
 
@@ -104,6 +107,7 @@ A full-stack task management application with time tracking, project grouping, b
 - **Hourly Proactive Notifications**: Users receive fresh in-app reminders for urgent tasks
 - **Dropdown Timers**: Live "Time Left" indicator directly inside the notification dropdown
 - **Populated Task Context**: Notifications link directly to task details
+- **Automated Data Integrity**: Deleting a task automatically performs a cascading delete of all associated **Notifications**, **Comments**, and **Time Entries** to prevent database bloating
 
 ### Kanban Board
 - **Status Columns**: Visual drag-agnostic columns (Not Started, In Progress, Blocked, Completed)
