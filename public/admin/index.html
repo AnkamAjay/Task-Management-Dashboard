@@ -112,6 +112,14 @@
           <label for="tags">Tags <span style="font-weight:400; color:#6b7280;">(comma-separated, e.g. bug, frontend)</span></label>
           <input type="text" id="tags" placeholder="e.g. bug, design, backend" />
         </div>
+        
+        <div class="form-group">
+          <label for="blockedBy">Blocked By (Dependencies)</label>
+          <select id="blockedBy" multiple style="height: 120px;">
+            <!-- Options will be populated dynamically -->
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px;">Hold Ctrl (or Cmd) to select multiple</small>
+        </div>
 
         <fieldset class="form-fieldset">
           <legend>Attachment (Optional)</legend>

@@ -96,6 +96,19 @@
   50% { opacity: 0.6; }
 }
 
+.blocked-badge-main {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ff7b72;
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
 /* Status Badges */
 .status-chip {
   display: inline-flex;

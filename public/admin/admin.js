@@ -96,10 +96,30 @@ async function fetchTasks() {
     }
     allTasks = await res.json();
     renderTasks();
+    updateBlockedByDropdown();
     setStatus(true);
   } catch (e) {
     setStatus(false);
   }
+}
+
+function updateBlockedByDropdown() {
+  const select = document.getElementById('blockedBy');
+  const currentTaskId = document.getElementById('taskId').value;
+  
+  // Save current selections
+  const selectedValues = Array.from(select.selectedOptions).map(opt => opt.value);
+  
+  select.innerHTML = '';
+  // Fill with all tasks except the one being edited
+  allTasks.forEach(t => {
+    if (String(t.id) === String(currentTaskId)) return;
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = `${t.taskName} (#${t.id})`;
+    if (selectedValues.includes(String(t.id))) opt.selected = true;
+    select.appendChild(opt);
+  });
 }
 
 async function createTask(data) {
@@ -166,6 +186,7 @@ async function handleSubmit(e) {
       .split(',')
       .map(t => t.trim().toLowerCase())
       .filter(Boolean),
+    blockedBy: Array.from(document.getElementById('blockedBy').selectedOptions).map(opt => opt.value),
   };
 
   const initialActivityComment = document.getElementById('adminActivityComment').value.trim();
@@ -229,6 +250,14 @@ function populateEditForm(task) {
   document.getElementById('downloadUrl').value = task.notes?.downloadUrl || '';
   document.getElementById('tags').value = (task.tags || []).join(', ');
 
+  // Update blockedBy dropdown and set selections
+  updateBlockedByDropdown();
+  const blockedBySelect = document.getElementById('blockedBy');
+  const blockedIds = (task.blockedBy || []).map(b => b.id || b._id || b);
+  Array.from(blockedBySelect.options).forEach(opt => {
+    opt.selected = blockedIds.includes(opt.value);
+  });
+
   document.getElementById('taskForm').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -245,6 +274,7 @@ function resetForm() {
   // Clear the activity comment as well
   const commentField = document.getElementById('adminActivityComment');
   if (commentField) commentField.value = '';
+  updateBlockedByDropdown();
 }
 
 function toDatetimeLocal(str) {
@@ -313,6 +343,7 @@ function buildTaskCard(task) {
           <span class="task-id-badge">#${task.id}</span>
           <h3 class="task-card-name">${escapeHtml(task.taskName)}</h3>
           ${overdue ? '<span class="overdue-tag">OVERDUE</span>' : ''}
+          ${task.blockedBy && task.blockedBy.length > 0 ? `<span class="blocked-badge" title="Blocked by: ${task.blockedBy.map(b => b.taskName).join(', ')}">🚫 Blocked</span>` : ''}
         </div>
         <div class="task-card-actions">
           <button class="edit-btn" data-task-id="${task.id}" title="Edit task">✏️ Edit</button>

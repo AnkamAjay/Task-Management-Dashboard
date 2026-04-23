@@ -61,7 +61,11 @@ const taskSchema = new mongoose.Schema({
     ref: 'User',
     required: false,
     default: null
-  }
+  },
+  blockedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Task'
+  }]
 }, {
   timestamps: true
 });

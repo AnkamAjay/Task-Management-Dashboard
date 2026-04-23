@@ -38,6 +38,7 @@ export const getTasks = async (req, res, next) => {
       .populate('project', 'name color')
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
+      .populate('blockedBy', 'taskName status')
       .sort({ deadline: 1 });
 
     // Single aggregation to get total tracked seconds per task (avoids N+1 queries)
@@ -68,7 +69,8 @@ export const getTask = async (req, res, next) => {
     const task = await Task.findById(req.params.id)
       .populate('project', 'name color')
       .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'name email')
+      .populate('blockedBy', 'taskName status');
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
@@ -229,6 +231,7 @@ export const getDueSoonTasks = async (req, res, next) => {
       deadline: { $gte: now, $lte: twentyFourHoursFromNow }
     })
     .populate('project', 'name color')
+    .populate('blockedBy', 'taskName status')
     .sort({ deadline: 1 });
 
     res.json(tasks);
