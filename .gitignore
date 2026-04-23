@@ -44,4 +44,4 @@ Thumbs.db
 *.sw?
 
 # AI Assistant Internal Files
-.gemini/
+.gemini/mongodb_data/

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // Configuration
-const ADMIN_SECRET = 'admin123';
+const ADMIN_SECRET = 'AdminSecret2026';
 const STAMP = Date.now();
 const ADMIN_NAME = `Admin ${STAMP}`;
 const USER_NAME = `User ${STAMP}`;
@@ -19,8 +19,10 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.fill('#email', ADMIN_EMAIL);
         await page.fill('#password', TEST_PASS);
         await page.fill('#adminSecret', ADMIN_SECRET);
-        await page.click('button.auth-submit-btn');
-        await expect(page).toHaveURL('/');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
         await expect(page.locator('a.admin-link-btn[href="/admin/"]')).toBeVisible();
     });
 
@@ -29,8 +31,10 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.locator('#name').fill(USER_NAME);
         await page.fill('#email', USER_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
-        await expect(page).toHaveURL('/');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
         await expect(page.locator('a.admin-link-btn[href="/admin/"]')).not.toBeVisible();
     });
 
@@ -39,13 +43,16 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', ADMIN_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
 
         await page.goto('/admin/');
         await page.waitForSelector('#taskName');
         await page.fill('#taskName', `IDOR Test Task ${STAMP}`);
         // Assign to self (Admin)
-        await page.selectOption('#assignedTo', { label: new RegExp(ADMIN_NAME) });
+        await page.selectOption('#assignedTo', { label: ADMIN_NAME });
         await page.click('#task-form button[type="submit"]');
         
         await page.waitForSelector(`button.delete-btn[data-task-id]`);
@@ -59,7 +66,10 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', USER_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
 
         // Attempt access
         const status = await page.evaluate(async (id) => {
@@ -90,12 +100,15 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', ADMIN_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
         
         await page.goto('/admin/');
         const taskName = `Delete Task ${STAMP}`;
         await page.fill('#taskName', taskName);
-        await page.selectOption('#assignedTo', { label: new RegExp(USER_NAME) });
+        await page.selectOption('#assignedTo', { label: USER_NAME });
         await page.click('#task-form button[type="submit"]');
 
         await page.waitForSelector(`div.task-card:has-text("${taskName}")`);
@@ -112,7 +125,10 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', USER_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
 
         const startBtn = page.locator('button:has-text("▶")').first();
         if (await startBtn.isVisible()) {
@@ -130,13 +146,16 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', ADMIN_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
         await page.goto('/admin/');
         
         const past = new Date(Date.now() - 3600000).toISOString().slice(0, 16);
         await page.fill('#taskName', `Locked Task ${STAMP}`);
         await page.fill('#deadline', past);
-        await page.selectOption('#assignedTo', { label: new RegExp(USER_NAME) });
+        await page.selectOption('#assignedTo', { label: USER_NAME });
         await page.click('#task-form button[type="submit"]');
 
         // User checks lockout
@@ -144,7 +163,10 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', USER_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
         
         const card = page.locator(`.task-card:has-text("Locked Task")`);
         await expect(card.locator('button:has-text("🔒")')).toBeVisible();
@@ -159,7 +181,10 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await page.goto('/login');
         await page.fill('#email', ADMIN_EMAIL);
         await page.fill('#password', TEST_PASS);
-        await page.click('button.auth-submit-btn');
+        await Promise.all([
+            page.waitForURL('/'),
+            page.click('button.auth-submit-btn')
+        ]);
         
         await page.goto('/timesheet');
         await page.click('.approve-btn');
@@ -212,7 +237,7 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         await expect(page.locator('#selectedCount')).toHaveText('2');
 
         // Reassign (to self)
-        await page.selectOption('#bulkAssignedTo', { label: new RegExp(ADMIN_NAME) });
+        await page.selectOption('#bulkAssignedTo', { label: ADMIN_NAME });
         await page.click('button:has-text("Reassign")');
         
         await expect(page.locator('.toast.success')).toBeVisible();
@@ -231,9 +256,9 @@ test.describe('Task Management Dashboard - Full 9-Section UAT Suite', () => {
         // 2. Create Blocked Task
         const blockedName = `Blocked Task ${STAMP}`;
         await page.fill('#taskName', blockedName);
-        await page.selectOption('#assignedTo', { label: new RegExp(USER_NAME) });
+        await page.selectOption('#assignedTo', { label: USER_NAME });
         // Select the blocker in the multiple-select dropdown
-        await page.selectOption('#blockedBy', { label: new RegExp(blockerName) });
+        await page.selectOption('#blockedBy', { label: blockerName });
         await page.click('#task-form button[type="submit"]');
 
         // 3. Login as User and check lockout
