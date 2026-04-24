@@ -38,6 +38,7 @@ export const getTasks = async (req, res, next) => {
       .populate('project', 'name color')
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
+      .populate('blockedBy', 'taskName status')
       .sort({ deadline: 1 });
 
     // Single aggregation to get total tracked seconds per task (avoids N+1 queries)
@@ -68,13 +69,17 @@ export const getTask = async (req, res, next) => {
     const task = await Task.findById(req.params.id)
       .populate('project', 'name color')
       .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'name email')
+      .populate('blockedBy', 'taskName status');
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
 
     // Role-based access control: regular users can only see tasks assigned to them
-    if (req.user.role !== 'admin' && String(task.assignedTo?._id) !== req.user.id) {
+    const assignedId = task.assignedTo?._id || task.assignedTo;
+    const isOwner = assignedId && String(assignedId) === String(req.user.id);
+    
+    if (req.user.role !== 'admin' && !isOwner) {
       return res.status(403).json({ message: 'Not authorized to view this task' });
     }
 
@@ -209,6 +214,8 @@ export const updateTaskStatus = async (req, res, next) => {
       status
     );
 
+
+
     res.json(task);
   } catch (error) {
     next(error);
@@ -229,9 +236,62 @@ export const getDueSoonTasks = async (req, res, next) => {
       deadline: { $gte: now, $lte: twentyFourHoursFromNow }
     })
     .populate('project', 'name color')
+    .populate('blockedBy', 'taskName status')
     .sort({ deadline: 1 });
 
     res.json(tasks);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Bulk update or delete tasks
+// @route   POST /api/tasks/bulk
+// @access  Private/Admin
+export const bulkUpdateTasks = async (req, res, next) => {
+  try {
+    const { taskIds, action, payload } = req.body;
+
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).json({ message: 'No task IDs provided' });
+    }
+
+    if (action === 'reassign') {
+      await Task.updateMany({ _id: { $in: taskIds } }, { assignedTo: payload.assignedTo });
+      
+      // Notify the new assignee if providing a single user for all
+      if (payload.assignedTo) {
+        await createInternalNotification(
+          payload.assignedTo,
+          `Batch assignment: ${taskIds.length} tasks assigned to you.`,
+          'task_assigned',
+          null
+        );
+      }
+    } 
+    else if (action === 'status_change') {
+      const update = { status: payload.status };
+      if (payload.status === 'Completed') {
+        update.endTime = new Date();
+      } else {
+        update.endTime = null;
+      }
+      await Task.updateMany({ _id: { $in: taskIds } }, update);
+    } 
+    else if (action === 'delete') {
+      await Task.deleteMany({ _id: { $in: taskIds } });
+      // Cleanup orphans
+      await Promise.all([
+        Comment.deleteMany({ task: { $in: taskIds } }),
+        TimeEntry.deleteMany({ task: { $in: taskIds } }),
+        Notification.deleteMany({ taskId: { $in: taskIds } })
+      ]);
+    } 
+    else {
+      return res.status(400).json({ message: 'Invalid bulk action' });
+    }
+
+    res.json({ message: 'Bulk operation completed successfully' });
   } catch (error) {
     next(error);
   }

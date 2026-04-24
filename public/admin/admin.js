@@ -35,6 +35,7 @@ function logout() {
 const API_BASE = window.location.origin;
 const API_URL = `${API_BASE}/api/tasks`;
 let allTasks = [];
+let selectedTasks = new Set();
 let deleteTargetId = null;
 
 // ─── Init ───────────────────────────────────────────────────────────────────
@@ -57,13 +58,14 @@ async function fetchUsers() {
     if (!res.ok) return;
     const users = await res.json();
     const select = document.getElementById('assignedTo');
-    select.innerHTML = '<option value="">-- Select Assignee --</option>';
-    users.forEach(u => {
-      const opt = document.createElement('option');
-      opt.value = u.id || u._id;   // id is set by toJSON transform
-      opt.textContent = `${u.name} (${u.email})`;
-      select.appendChild(opt);
-    });
+    const bulkSelect = document.getElementById('bulkAssignedTo');
+    const optionsHtml = '<option value="">Reassign to...</option>' + 
+      users.map(u => `<option value="${u.id || u._id}">${u.name} (${u.email})</option>`).join('');
+    
+    select.innerHTML = '<option value="">-- Select Assignee --</option>' + 
+      users.map(u => `<option value="${u.id || u._id}">${u.name} (${u.email})</option>`).join('');
+    
+    if (bulkSelect) bulkSelect.innerHTML = optionsHtml;
   } catch (e) {
     console.warn('Could not load users for dropdown:', e.message);
   }
@@ -96,10 +98,30 @@ async function fetchTasks() {
     }
     allTasks = await res.json();
     renderTasks();
+    updateBlockedByDropdown();
     setStatus(true);
   } catch (e) {
     setStatus(false);
   }
+}
+
+function updateBlockedByDropdown() {
+  const select = document.getElementById('blockedBy');
+  const currentTaskId = document.getElementById('taskId').value;
+  
+  // Save current selections
+  const selectedValues = Array.from(select.selectedOptions).map(opt => opt.value);
+  
+  select.innerHTML = '';
+  // Fill with all tasks except the one being edited
+  allTasks.forEach(t => {
+    if (String(t.id) === String(currentTaskId)) return;
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = `${t.taskName} (#${t.id})`;
+    if (selectedValues.includes(String(t.id))) opt.selected = true;
+    select.appendChild(opt);
+  });
 }
 
 async function createTask(data) {
@@ -166,6 +188,11 @@ async function handleSubmit(e) {
       .split(',')
       .map(t => t.trim().toLowerCase())
       .filter(Boolean),
+    blockedBy: Array.from(document.getElementById('blockedBy').selectedOptions).map(opt => opt.value),
+    recurring: {
+      enabled: document.getElementById('recurringEnabled').checked,
+      frequency: document.getElementById('frequency').value
+    }
   };
 
   const initialActivityComment = document.getElementById('adminActivityComment').value.trim();
@@ -228,6 +255,19 @@ function populateEditForm(task) {
   document.getElementById('fileName').value = task.notes?.fileName || '';
   document.getElementById('downloadUrl').value = task.notes?.downloadUrl || '';
   document.getElementById('tags').value = (task.tags || []).join(', ');
+  
+  const isRecurring = !!task.recurring?.enabled;
+  document.getElementById('recurringEnabled').checked = isRecurring;
+  document.getElementById('frequency').value = task.recurring?.frequency || 'daily';
+  toggleFrequency(isRecurring);
+
+  // Update blockedBy dropdown and set selections
+  updateBlockedByDropdown();
+  const blockedBySelect = document.getElementById('blockedBy');
+  const blockedIds = (task.blockedBy || []).map(b => b.id || b._id || b);
+  Array.from(blockedBySelect.options).forEach(opt => {
+    opt.selected = blockedIds.includes(opt.value);
+  });
 
   document.getElementById('taskForm').scrollIntoView({ behavior: 'smooth' });
 }
@@ -245,6 +285,14 @@ function resetForm() {
   // Clear the activity comment as well
   const commentField = document.getElementById('adminActivityComment');
   if (commentField) commentField.value = '';
+  document.getElementById('frequencyGroup').classList.add('hidden');
+  updateBlockedByDropdown();
+}
+
+function toggleFrequency(enabled) {
+  const group = document.getElementById('frequencyGroup');
+  if (enabled) group.classList.remove('hidden');
+  else group.classList.add('hidden');
 }
 
 function toDatetimeLocal(str) {
@@ -309,10 +357,14 @@ function buildTaskCard(task) {
   return `
     <div class="task-card ${priorityClass} ${overdueClass}">
       <div class="task-card-header">
+        <div class="task-selection">
+          <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${selectedTasks.has(String(task.id)) ? 'checked' : ''} />
+        </div>
         <div class="task-card-title-row">
           <span class="task-id-badge">#${task.id}</span>
           <h3 class="task-card-name">${escapeHtml(task.taskName)}</h3>
           ${overdue ? '<span class="overdue-tag">OVERDUE</span>' : ''}
+          ${task.blockedBy && task.blockedBy.length > 0 ? `<span class="blocked-badge" title="Blocked by: ${task.blockedBy.map(b => b.taskName).join(', ')}">🚫 Blocked</span>` : ''}
         </div>
         <div class="task-card-actions">
           <button class="edit-btn" data-task-id="${task.id}" title="Edit task">✏️ Edit</button>
@@ -510,14 +562,103 @@ if (listEl) {
       toggleAdminActivity(taskId);
     } else if (target.classList.contains('admin-post-comment-btn')) {
       postAdminComment(taskId);
+    } else if (target.classList.contains('task-checkbox')) {
+      toggleTaskSelection(taskId, target.checked);
     }
   });
 }
+
+// ─── Bulk Action Logic ───────────────────────────────────────────────────────
+
+function toggleTaskSelection(id, isSelected) {
+  if (isSelected) {
+    selectedTasks.add(String(id));
+  } else {
+    selectedTasks.delete(String(id));
+    document.getElementById('selectAllTasks').checked = false;
+  }
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  const checkboxes = document.querySelectorAll('.task-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = checked;
+    const id = cb.getAttribute('data-task-id');
+    if (checked) selectedTasks.add(String(id));
+    else selectedTasks.delete(String(id));
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkActionBar');
+  const countSpan = document.getElementById('selectedCount');
+  
+  if (selectedTasks.size > 0) {
+    bar.classList.remove('hidden');
+    countSpan.textContent = selectedTasks.size;
+  } else {
+    bar.classList.add('hidden');
+  }
+}
+
+function clearSelection() {
+  selectedTasks.clear();
+  document.getElementById('selectAllTasks').checked = false;
+  const checkboxes = document.querySelectorAll('.task-checkbox');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateBulkBar();
+}
+
+async function handleBulkAction(action) {
+  const taskIds = Array.from(selectedTasks);
+  let payload = {};
+
+  if (action === 'reassign') {
+    const userId = document.getElementById('bulkAssignedTo').value;
+    if (!userId) return showToast('Please select a user to reassign to.', 'error');
+    payload = { assignedTo: userId };
+  } else if (action === 'status_change') {
+    const status = document.getElementById('bulkStatus').value;
+    if (!status) return showToast('Please select a status.', 'error');
+    payload = { status };
+  } else if (action === 'delete') {
+    if (!confirm(`Are you sure you want to delete ${taskIds.length} tasks? This action cannot be undone.`)) {
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/tasks/bulk`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ taskIds, action, payload })
+    });
+
+    if (!res.ok) {
+      if (handleUnauthorized(res.status)) return;
+      throw new Error('Bulk action failed');
+    }
+
+    showToast(`✅ Bulk ${action} completed!`, 'success');
+    clearSelection();
+    await fetchTasks();
+  } catch (err) {
+    showToast('❌ Error: ' + err.message, 'error');
+  }
+}
+
+// Expose to window
+window.toggleSelectAll = toggleSelectAll;
+window.handleBulkAction = handleBulkAction;
+window.clearSelection = clearSelection;
 
 // Expose functions to window for onclick handlers that are still in HTML (like modals/header)
 window.logout = logout;
 window.closeModal = closeModal;
 window.cancelEdit = cancelEdit;
 window.confirmDelete = confirmDelete;
+window.toggleFrequency = toggleFrequency;
 
 init();

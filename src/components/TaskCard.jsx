@@ -61,6 +61,9 @@ function TaskCard({ task }) {
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining(task.deadline));
   
+  const incompleteBlockers = (task.blockedBy || []).filter(b => b.status !== 'Completed');
+  const isBlocked = incompleteBlockers.length > 0;
+  
   // Update state immediately if deadline prop changes
   useEffect(() => {
     setTimeRemaining(getTimeRemaining(task.deadline));
@@ -195,7 +198,12 @@ function TaskCard({ task }) {
             {task.project.name}
           </span>
         )}
-        <span className="task-name">{task.taskName}</span>
+        <span className="task-name">
+          {task.taskName}
+          {task.recurring && task.recurring.enabled && (
+            <span className="recurring-badge" title={`Recurring: ${task.recurring.frequency}`}>🔁</span>
+          )}
+        </span>
         
         {task.isBillable && (
           <span className="project-badge" style={{ background: '#10b981', marginLeft: '8px' }}>
@@ -227,6 +235,11 @@ function TaskCard({ task }) {
         )}
 
         <div className="task-badges">
+          {isBlocked && (
+            <span className="blocked-badge-main" title={`Blocked by: ${incompleteBlockers.map(b => b.taskName).join(', ')}`}>
+              🚫 Blocked by: {incompleteBlockers.map(b => b.taskName).join(', ')}
+            </span>
+          )}
           {overdue && localStatus !== 'Completed' && <span className="overdue-badge">Overdue</span>}
           {isDueSoon && localStatus !== 'Completed' && (
             <span className="due-soon-badge pulse">
@@ -269,6 +282,10 @@ function TaskCard({ task }) {
           ) : isEffectivelyOverdue ? (
             <button className="timer-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed', color: '#ff7b72', background: 'rgba(248, 81, 73, 0.1)', borderColor: 'rgba(248, 81, 73, 0.4)' }}>
               🔒 Deadline Passed
+            </button>
+          ) : isBlocked ? (
+            <button className="timer-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed', color: '#8b949e', background: 'rgba(139, 148, 158, 0.1)', borderColor: 'rgba(139, 148, 158, 0.4)' }}>
+              🚫 Blocked
             </button>
           ) : (
             <button 
