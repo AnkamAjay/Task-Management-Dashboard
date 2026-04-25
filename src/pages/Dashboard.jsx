@@ -128,6 +128,7 @@ function Dashboard() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
   const [viewType, setViewType] = useState(() => localStorage.getItem('dashboard_view') || 'table');
+  const [highlightedTaskId, setHighlightedTaskId] = useState(null);
   const [toast, setToast] = useState(null);
   const { token, user, logout } = useAuth();
 
@@ -221,6 +222,58 @@ function Dashboard() {
     localStorage.setItem('dashboard_view', viewType);
   }, [viewType]);
 
+  const handleNavigateToTask = useCallback((taskId) => {
+    if (!taskId) return;
+    
+    // 1. Check if task exists in our loaded set
+    const task = tasks.find(t => String(t.id || t._id) === String(taskId));
+    
+    if (!task) {
+      showToast("⚠️ Task not found or deleted");
+      return;
+    }
+
+    // 2. Scroll to the task element
+    setTimeout(() => {
+      let element = document.getElementById(`task-${taskId}`);
+      
+      if (!element) {
+        // Task exists but is filtered out. Clear filters!
+        setSearchTerm('');
+        setPriorityFilter('All');
+        setTagFilter('all');
+        setProjectFilter('all');
+        
+        // Try scrolling again after filters are cleared and React re-renders
+        setTimeout(() => {
+          element = document.getElementById(`task-${taskId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedTaskId(taskId);
+            setTimeout(() => setHighlightedTaskId(null), 3000);
+          } else {
+            showToast("⚠️ Task hidden by current view filters");
+          }
+        }, 200);
+      } else {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 3. Apply highlight via state
+        setHighlightedTaskId(taskId);
+        setTimeout(() => setHighlightedTaskId(null), 3000);
+      }
+    }, 100);
+  }, [tasks]);
+
+  // Handle taskId from URL query param (e.g. after redirect from another page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const taskId = params.get('taskId');
+    if (taskId && !loading && tasks.length > 0) {
+      handleNavigateToTask(taskId);
+      // Clean up the URL without refreshing the page
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [loading, tasks.length, handleNavigateToTask]);
   const processedTasks = tasks
     .filter((task) => {
       const term = searchTerm.toLowerCase();
@@ -239,36 +292,6 @@ function Dashboard() {
       if (deadlineDiff !== 0) return deadlineDiff;
       return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
     });
-
-  const handleNavigateToTask = useCallback((taskId) => {
-    const task = tasks.find(t => String(t.id || t._id) === String(taskId));
-    
-    if (!task) {
-      showToast('⚠️ Task not found or deleted');
-      return;
-    }
-
-    // Clear filters if the task is hidden
-    const isVisible = processedTasks.some(t => String(t.id || t._id) === String(taskId));
-    if (!isVisible) {
-      setSearchTerm('');
-      setPriorityFilter('All');
-      setTagFilter('all');
-      setProjectFilter('all');
-    }
-
-    // Wait for state updates/DOM re-render
-    setTimeout(() => {
-      const element = document.getElementById(`task-${taskId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.classList.add('highlight-glow');
-        setTimeout(() => element.classList.remove('highlight-glow'), 2500);
-      } else {
-        showToast('⚠️ Task component not found on page');
-      }
-    }, 100);
-  }, [tasks, processedTasks]);
 
   return (
     <div className="app-wrapper">
@@ -349,9 +372,9 @@ function Dashboard() {
               </div>
             </div>
             {viewType === 'table' ? (
-              <TaskTable tasks={processedTasks} user={user} />
+              <TaskTable tasks={processedTasks} user={user} highlightedTaskId={highlightedTaskId} />
             ) : (
-              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} />
+              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
             )}
           </>
         )}

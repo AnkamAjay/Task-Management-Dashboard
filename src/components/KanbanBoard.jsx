@@ -32,7 +32,7 @@ function getTimeRemaining(deadlineStr) {
   return { total, days, hours, minutes };
 }
 
-function KanbanCard({ task, onStatusChange }) {
+function KanbanCard({ task, onStatusChange, highlighted }) {
   const { token, user } = useAuth();
   const [localStatus, setLocalStatus] = useState(task.status);
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining(task.deadline));
@@ -84,7 +84,10 @@ function KanbanCard({ task, onStatusChange }) {
   };
 
   return (
-    <div id={`task-${task.id}`} className={`kanban-card ${priority.className} ${overdue && localStatus !== 'Completed' ? 'overdue' : ''} ${isDueSoon && localStatus !== 'Completed' ? 'due-soon' : ''}`}>
+    <div 
+      id={`task-${task.id}`}
+      className={`kanban-card ${priority.className} ${overdue && localStatus !== 'Completed' ? 'overdue' : ''} ${isDueSoon && localStatus !== 'Completed' ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
+    >
       <div className="kanban-card-header">
         {task.project && (
           <span className="kanban-project-badge" style={{ background: task.project.color }}>
@@ -147,7 +150,7 @@ function KanbanCard({ task, onStatusChange }) {
   );
 }
 
-function KanbanBoard({ tasks, onRefresh }) {
+function KanbanBoard({ tasks, onRefresh, highlightedTaskId }) {
   const tasksByStatus = STATUS_COLUMNS.reduce((acc, status) => {
     acc[status] = tasks.filter(t => t.status === status);
     return acc;
@@ -168,7 +171,12 @@ function KanbanBoard({ tasks, onRefresh }) {
                 <div className="kanban-empty-column">No tasks</div>
               ) : (
                 tasksByStatus[status].map(task => (
-                  <KanbanCard key={task.id} task={task} onStatusChange={onRefresh} />
+                  <KanbanCard 
+                    key={task.id} 
+                    task={task} 
+                    onStatusChange={onRefresh} 
+                    highlighted={String(task.id) === String(highlightedTaskId)} 
+                  />
                 ))
               )}
             </div>

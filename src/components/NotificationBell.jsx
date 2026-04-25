@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
@@ -11,6 +12,7 @@ function NotificationBell({ onNavigateToTask }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { token } = useAuth();
+  const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   const fetchNotifications = useCallback(async () => {
@@ -76,7 +78,12 @@ function NotificationBell({ onNavigateToTask }) {
 
   const handleNotificationClick = (taskId) => {
     setShowDropdown(false);
-    if (onNavigateToTask) onNavigateToTask(taskId);
+    if (onNavigateToTask) {
+      onNavigateToTask(taskId);
+    } else {
+      // If we are on another page (Timesheet, etc.), redirect to Dashboard with taskId
+      navigate(`/?taskId=${taskId}`);
+    }
   };
 
   return (

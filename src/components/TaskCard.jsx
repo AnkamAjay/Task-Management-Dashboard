@@ -47,7 +47,7 @@ function getTimeRemaining(deadlineStr) {
   return { total, days, hours, minutes };
 }
 
-function TaskCard({ task }) {
+function TaskCard({ task, highlighted }) {
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.Low;
   const overdue = isOverdue(task.deadline);
   
@@ -187,7 +187,10 @@ function TaskCard({ task }) {
   };
 
   return (
-    <div id={`task-${task.id}`} className={`task-row ${priority.className} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''}`}>
+    <div 
+      id={`task-${task.id}`}
+      className={`task-row ${priority.className} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
+    >
       <div className="col-id">
         <span className="task-id">#{task.id}</span>
       </div>
