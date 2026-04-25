@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
@@ -6,11 +7,12 @@ import './Navbar.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-function NotificationBell() {
+function NotificationBell({ onNavigateToTask }) {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { token } = useAuth();
+  const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   const fetchNotifications = useCallback(async () => {
@@ -58,6 +60,16 @@ function NotificationBell() {
     }
   };
 
+  const handleNotificationClick = (taskId) => {
+    setShowDropdown(false);
+    if (onNavigateToTask) {
+      onNavigateToTask(taskId);
+    } else {
+      // If we are on another page (Timesheet, etc.), redirect to Dashboard with taskId
+      navigate(`/?taskId=${taskId}`);
+    }
+  };
+
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
       <button className="bell-btn" onClick={toggleDropdown} title="Notifications">
@@ -69,6 +81,7 @@ function NotificationBell() {
         <NotificationDropdown 
           notifications={notifications} 
           onMarkAsRead={handleMarkAsRead}
+          onNotificationClick={handleNotificationClick}
           onClose={() => setShowDropdown(false)}
         />
       )}

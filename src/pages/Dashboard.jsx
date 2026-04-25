@@ -127,6 +127,7 @@ function Dashboard() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
   const [viewType, setViewType] = useState(() => localStorage.getItem('dashboard_view') || 'table');
+  const [highlightedTaskId, setHighlightedTaskId] = useState(null);
   const { token, user, logout } = useAuth();
 
   const fetchProjects = useCallback(async () => {
@@ -180,6 +181,60 @@ function Dashboard() {
     localStorage.setItem('dashboard_view', viewType);
   }, [viewType]);
 
+  const handleNavigateToTask = useCallback((taskId) => {
+    if (!taskId) return;
+    
+    // 1. Check if task exists in our loaded set
+    const taskExists = tasks.some(t => String(t.id) === String(taskId));
+    
+    if (!taskExists) {
+      alert("Task not found. It may have been deleted or you don't have access.");
+      return;
+    }
+
+    // 2. Scroll to the task element
+    // Small delay to ensure component is rendered
+    setTimeout(() => {
+      let element = document.getElementById(`task-${taskId}`);
+      
+      if (!element) {
+        // Task exists but is filtered out. Clear filters!
+        setSearchTerm('');
+        setPriorityFilter('All');
+        setTagFilter('all');
+        setProjectFilter('all');
+        
+        // Try scrolling again after filters are cleared and React re-renders
+        setTimeout(() => {
+          element = document.getElementById(`task-${taskId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedTaskId(taskId);
+            setTimeout(() => setHighlightedTaskId(null), 3000);
+          } else {
+            alert("Task could not be located even after clearing filters. Try switching Dashboard views.");
+          }
+        }, 200);
+      } else {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 3. Apply highlight
+        setHighlightedTaskId(taskId);
+        setTimeout(() => setHighlightedTaskId(null), 3000);
+      }
+    }, 100);
+  }, [tasks]);
+
+  // Handle taskId from URL query param (e.g. after redirect from another page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const taskId = params.get('taskId');
+    if (taskId && !loading && tasks.length > 0) {
+      handleNavigateToTask(taskId);
+      // Clean up the URL without refreshing the page
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [loading, tasks.length, handleNavigateToTask]);
+
   const processedTasks = tasks
     .filter((task) => {
       const term = searchTerm.toLowerCase();
@@ -208,6 +263,7 @@ function Dashboard() {
         onPriorityChange={setPriorityFilter}
         lastUpdated={lastUpdated}
         taskCount={processedTasks.length}
+        onNavigateToTask={handleNavigateToTask}
       />
       <main className="main-content">
         {!loading && !error && user?.role === 'admin' && (
@@ -277,9 +333,9 @@ function Dashboard() {
               </div>
             </div>
             {viewType === 'table' ? (
-              <TaskTable tasks={processedTasks} user={user} />
+              <TaskTable tasks={processedTasks} user={user} highlightedTaskId={highlightedTaskId} />
             ) : (
-              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} />
+              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
             )}
           </>
         )}
