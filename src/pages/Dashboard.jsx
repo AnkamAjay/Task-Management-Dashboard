@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import Navbar from '../components/Navbar';
 import TaskTable from '../components/TaskTable';
 import KanbanBoard from '../components/KanbanBoard';
@@ -75,7 +76,7 @@ function AdminOnboarding({ projects, tasks }) {
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TASKS_API = `${API_BASE}/api/tasks`;
-const POLL_INTERVAL = 10000; // 10 seconds
+const FALLBACK_POLL_INTERVAL = 60000; // 60 seconds backup
 
 const PRIORITY_ORDER = { High: 1, Medium: 2, Low: 3 };
 
@@ -173,14 +174,48 @@ function Dashboard() {
   }, [token, projectFilter, logout]);
 
   useEffect(() => {
+    if (!token) return;
+
     fetchProjects();
     fetchTasks(true);
-    const interval = setInterval(() => {
-      fetchProjects();
+
+    // WebSocket Setup
+    connectSocket(token);
+
+    socket.on('task:created', () => {
+      console.log('Socket: task:created received');
       fetchTasks(false);
-    }, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [fetchTasks, fetchProjects]);
+    });
+    socket.on('task:updated', () => {
+      console.log('Socket: task:updated received');
+      fetchTasks(false);
+    });
+    socket.on('task:deleted', () => {
+      console.log('Socket: task:deleted received');
+      fetchTasks(false);
+    });
+    socket.on('tasks:bulk_updated', () => {
+      console.log('Socket: tasks:bulk_updated received');
+      fetchTasks(false);
+    });
+
+    // Fallback polling (much slower)
+    const interval = setInterval(() => {
+      if (!socket.connected) {
+        console.log('WS disconnected, using fallback poll...');
+        fetchProjects();
+        fetchTasks(false);
+      }
+    }, FALLBACK_POLL_INTERVAL);
+
+    return () => {
+      socket.off('task:created');
+      socket.off('task:updated');
+      socket.off('task:deleted');
+      socket.off('tasks:bulk_updated');
+      clearInterval(interval);
+    };
+  }, [fetchTasks, fetchProjects, token]);
 
   useEffect(() => {
     localStorage.setItem('dashboard_view', viewType);

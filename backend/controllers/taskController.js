@@ -5,6 +5,7 @@ import { logActivity } from './commentController.js';
 import { createInternalNotification } from './notificationController.js';
 import Notification from '../models/Notification.js';
 import { logAudit } from '../utils/auditLogger.js';
+import { emitEvent } from '../utils/socket.js';
 
 // @desc    Get all tasks
 // @route   GET /api/tasks
@@ -114,6 +115,8 @@ export const createTask = async (req, res, next) => {
 
     await logAudit(req.user.id, 'CREATE_TASK', 'Task', task._id, { taskName: task.taskName });
     
+    emitEvent('task:created', task);
+
     res.status(201).json(task);
   } catch (error) {
     next(error);
@@ -151,6 +154,8 @@ export const updateTask = async (req, res, next) => {
       changes: req.body 
     });
 
+    emitEvent('task:updated', task);
+
     res.json(task);
   } catch (error) {
     next(error);
@@ -176,6 +181,8 @@ export const deleteTask = async (req, res, next) => {
     ]);
 
     await logAudit(req.user.id, 'DELETE_TASK', 'Task', req.params.id, { taskName: task.taskName });
+
+    emitEvent('task:deleted', { _id: req.params.id });
 
     res.json({ message: 'Task deleted successfully' });
   } catch (error) {
@@ -232,6 +239,8 @@ export const updateTaskStatus = async (req, res, next) => {
         newStatus: status 
       });
     }
+
+    emitEvent('task:updated', task);
 
     res.json(task);
   } catch (error) {
@@ -312,6 +321,8 @@ export const bulkUpdateTasks = async (req, res, next) => {
       count: taskIds.length,
       payload 
     });
+
+    emitEvent('tasks:bulk_updated', { taskIds, action, payload });
 
     res.json({ message: 'Bulk operation completed successfully' });
   } catch (error) {

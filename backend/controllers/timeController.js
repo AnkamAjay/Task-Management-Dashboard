@@ -3,6 +3,7 @@ import Task from '../models/Task.js';
 import User from '../models/User.js';
 import WeeklyTimesheet from '../models/WeeklyTimesheet.js';
 import { logActivity } from './commentController.js';
+import { emitEvent } from '../utils/socket.js';
 
 // Helper to check if a specific date belongs to an approved timesheet week
 const isWeekLocked = async (userId, date) => {
@@ -63,6 +64,8 @@ export const startTimer = async (req, res, next) => {
       'Started timer', 
       'timer_start'
     );
+    
+    emitEvent('timer:started', { entry: newEntry }, `user:${req.user.id}`);
 
     res.status(201).json({ message: 'Timer started', entry: newEntry, previousStopped: !!activeTimer });
   } catch (error) {
@@ -98,6 +101,8 @@ export const stopTimer = async (req, res, next) => {
       `Stopped timer (${Math.floor(entry.duration / 60)}m ${entry.duration % 60}s tracked)`, 
       'timer_stop'
     );
+
+    emitEvent('timer:stopped', { entry }, `user:${req.user.id}`);
 
     res.json(entry);
   } catch (error) {
