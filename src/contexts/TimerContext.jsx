@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
+import socket, { connectSocket, joinUserRoom } from '../utils/socket';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TIME_ENTRIES_API = `${API_BASE}/api/time-entries`;
@@ -34,6 +35,31 @@ export const TimerProvider = ({ children }) => {
   useEffect(() => {
     fetchActiveTimer();
   }, [fetchActiveTimer]);
+
+  useEffect(() => {
+    if (!token || !user) return;
+    
+    connectSocket(token);
+    joinUserRoom(user.id);
+
+    const handleTimerStarted = (data) => {
+      console.log('Socket: Timer started externally', data);
+      setActiveEntry(data.entry);
+    };
+
+    const handleTimerStopped = () => {
+      console.log('Socket: Timer stopped externally');
+      setActiveEntry(null);
+    };
+
+    socket.on('timer:started', handleTimerStarted);
+    socket.on('timer:stopped', handleTimerStopped);
+
+    return () => {
+      socket.off('timer:started', handleTimerStarted);
+      socket.off('timer:stopped', handleTimerStopped);
+    };
+  }, [token, user]);
 
   // The "Brain" Loop: Polling every 1 second
   useEffect(() => {
