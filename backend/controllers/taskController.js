@@ -114,8 +114,11 @@ export const createTask = async (req, res, next) => {
     }
 
     await logAudit(req.user.id, 'CREATE_TASK', 'Task', task._id, { taskName: task.taskName });
-    
-    emitEvent('task:created', task);
+
+    emitEvent('task:created', task, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      'admins'
+    ]);
 
     res.status(201).json(task);
   } catch (error) {
@@ -149,12 +152,17 @@ export const updateTask = async (req, res, next) => {
       );
     }
 
-    await logAudit(req.user.id, 'UPDATE_TASK', 'Task', task._id, { 
+    await logAudit(req.user.id, 'UPDATE_TASK', 'Task', task._id, {
       taskName: task.taskName,
-      changes: req.body 
+      changes: req.body
     });
 
-    emitEvent('task:updated', task);
+    // Reach the new assignee, the old one (if reassigned), and any admin watcher.
+    emitEvent('task:updated', task, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      originalTask.assignedTo ? `user:${originalTask.assignedTo}` : null,
+      'admins'
+    ]);
 
     res.json(task);
   } catch (error) {
@@ -182,7 +190,10 @@ export const deleteTask = async (req, res, next) => {
 
     await logAudit(req.user.id, 'DELETE_TASK', 'Task', req.params.id, { taskName: task.taskName });
 
-    emitEvent('task:deleted', { _id: req.params.id });
+    emitEvent('task:deleted', { _id: req.params.id }, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      'admins'
+    ]);
 
     res.json({ message: 'Task deleted successfully' });
   } catch (error) {
@@ -233,14 +244,17 @@ export const updateTaskStatus = async (req, res, next) => {
     );
 
     if (req.user.role === 'admin') {
-      await logAudit(req.user.id, 'UPDATE_TASK_STATUS', 'Task', task._id, { 
-        taskName: task.taskName, 
-        oldStatus, 
-        newStatus: status 
+      await logAudit(req.user.id, 'UPDATE_TASK_STATUS', 'Task', task._id, {
+        taskName: task.taskName,
+        oldStatus,
+        newStatus: status
       });
     }
 
-    emitEvent('task:updated', task);
+    emitEvent('task:updated', task, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      'admins'
+    ]);
 
     res.json(task);
   } catch (error) {
@@ -280,6 +294,16 @@ export const bulkUpdateTasks = async (req, res, next) => {
 
     if (!Array.isArray(taskIds) || taskIds.length === 0) {
       return res.status(400).json({ message: 'No task IDs provided' });
+    }
+
+    // Snapshot affected assignees before mutation so we can target the emit.
+    const affectedTasks = await Task.find({ _id: { $in: taskIds } }, 'assignedTo');
+    const affectedRooms = new Set(['admins']);
+    affectedTasks.forEach(t => {
+      if (t.assignedTo) affectedRooms.add(`user:${t.assignedTo}`);
+    });
+    if (action === 'reassign' && payload.assignedTo) {
+      affectedRooms.add(`user:${payload.assignedTo}`);
     }
 
     if (action === 'reassign') {
@@ -322,7 +346,7 @@ export const bulkUpdateTasks = async (req, res, next) => {
       payload 
     });
 
-    emitEvent('tasks:bulk_updated', { taskIds, action, payload });
+    emitEvent('tasks:bulk_updated', { taskIds, action, payload }, [...affectedRooms]);
 
     res.json({ message: 'Bulk operation completed successfully' });
   } catch (error) {

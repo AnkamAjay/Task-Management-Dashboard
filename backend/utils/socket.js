@@ -18,6 +18,11 @@ export const initSocket = (httpServer, allowedOrigins) => {
       console.log(`Socket ${socket.id} joined room user:${userId}`);
     });
 
+    socket.on('joinAdmins', () => {
+      socket.join('admins');
+      console.log(`Socket ${socket.id} joined room admins`);
+    });
+
     socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id);
     });
@@ -33,14 +38,18 @@ export const getIO = () => {
   return io;
 };
 
-export const emitEvent = (event, data, room = null) => {
+// Emit to one or many rooms. Pass null/undefined to broadcast (avoid for sensitive payloads).
+export const emitEvent = (event, data, rooms = null) => {
   if (!io) {
     console.warn('Socket.io NOT initialized, cannot emit:', event);
     return;
   }
-  if (room) {
-    console.log(`Emitting ${event} to room ${room}`);
-    io.to(room).emit(event, data);
+  if (rooms) {
+    const targets = Array.isArray(rooms) ? rooms.filter(Boolean) : [rooms];
+    if (targets.length === 0) return;
+    const unique = [...new Set(targets)];
+    console.log(`Emitting ${event} to rooms ${unique.join(', ')}`);
+    io.to(unique).emit(event, data);
   } else {
     console.log(`Broadcasting ${event}`);
     io.emit(event, data);

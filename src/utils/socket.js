@@ -29,4 +29,14 @@ export const joinUserRoom = (userId) => {
   }
 };
 
+export const joinAdminRoom = () => {
+  if (socket.connected) {
+    socket.emit('joinAdmins');
+  } else {
+    socket.once('connect', () => {
+      socket.emit('joinAdmins');
+    });
+  }
+};
+
 export default socket;

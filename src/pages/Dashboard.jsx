@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import socket, { connectSocket, disconnectSocket, joinUserRoom } from '../utils/socket';
+import socket, { connectSocket, disconnectSocket, joinUserRoom, joinAdminRoom } from '../utils/socket';
 import Navbar from '../components/Navbar';
 import TaskTable from '../components/TaskTable';
 import KanbanBoard from '../components/KanbanBoard';
@@ -183,6 +183,7 @@ function Dashboard() {
     // WebSocket Setup
     connectSocket(token);
     if (user?.id) joinUserRoom(user.id);
+    if (user?.role === 'admin') joinAdminRoom();
 
     socket.on('task:created', () => {
       console.log('Socket: task:created received');
@@ -217,7 +218,7 @@ function Dashboard() {
       socket.off('tasks:bulk_updated');
       clearInterval(interval);
     };
-  }, [fetchTasks, fetchProjects, token, user?.id]);
+  }, [fetchTasks, fetchProjects, token, user?.id, user?.role]);
 
   useEffect(() => {
     localStorage.setItem('dashboard_view', viewType);
@@ -349,7 +350,7 @@ function Dashboard() {
                     fontSize: '0.8rem', 
                     borderRadius: '6px', 
                     background: viewType === 'table' ? 'var(--accent)' : 'transparent',
-                    color: viewType === 'table' ? 'white' : 'var(--text-muted)',
+                    color: viewType === 'table' ? 'var(--on-accent)' : 'var(--text-muted)',
                     border: 'none',
                     cursor: 'pointer'
                   }}
@@ -363,7 +364,7 @@ function Dashboard() {
                     fontSize: '0.8rem', 
                     borderRadius: '6px', 
                     background: viewType === 'kanban' ? 'var(--accent)' : 'transparent',
-                    color: viewType === 'kanban' ? 'white' : 'var(--text-muted)',
+                    color: viewType === 'kanban' ? 'var(--on-accent)' : 'var(--text-muted)',
                     border: 'none',
                     cursor: 'pointer'
                   }}
