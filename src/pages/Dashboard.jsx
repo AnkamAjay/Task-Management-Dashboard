@@ -7,7 +7,7 @@ import KanbanBoard from '../components/KanbanBoard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TaskModal from '../components/TaskModal';
 import Sidebar from '../components/Sidebar';
-import { Tag, FolderOpen, LayoutList, Columns } from 'lucide-react';
+import { Tag, FolderOpen, LayoutList, Columns, SearchX } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
 
@@ -376,7 +376,8 @@ function Dashboard() {
                 </div>
               </div>
 
-              {viewType === 'table' ? (
+            {processedTasks.length > 0 ? (
+              viewType === 'table' ? (
                 <TaskTable 
                   tasks={processedTasks} 
                   user={user} 
@@ -386,16 +387,34 @@ function Dashboard() {
                 />
               ) : (
                 <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
-              )}
+              )
+            ) : (
+              <div className="empty-search-state">
+                <div className="empty-search-icon"><SearchX size={36} strokeWidth={1.25} /></div>
+                <h3>No tasks match your filters</h3>
+                <p>Try adjusting your search terms or filters to find what you're looking for.</p>
+                <button 
+                  className="reset-filters-btn"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setPriorityFilter('All');
+                    setTagFilter('all');
+                    setProjectFilter('all');
+                  }}
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
 
-              {selectedTask && (
-                <TaskModal 
-                  task={selectedTask} 
-                  onClose={() => setSelectedTask(null)} 
-                />
-              )}
-            </>
-          )}
+            {selectedTask && (
+              <TaskModal 
+                task={selectedTask} 
+                onClose={() => setSelectedTask(null)} 
+              />
+            )}
+          </>
+        )}
         </main>
       </div>
       {toast && <div className="toast-notification">{toast}</div>}
