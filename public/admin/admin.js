@@ -332,6 +332,7 @@ function renderTasks() {
   }
 
   list.innerHTML = tasks.map(task => buildTaskCard(task)).join('');
+  if (window.lucide) window.lucide.createIcons();
 }
 
 function buildTaskCard(task) {

@@ -1,3 +1,9 @@
+import { 
+  Inbox, 
+  Settings, 
+  ArrowUp,
+  FolderOpen
+} from 'lucide-react';
 import TaskCard from './TaskCard';
 import './TaskTable.css';
 
@@ -6,18 +12,24 @@ function TaskTable({ tasks, user, highlightedTaskId }) {
     if (user?.role === 'admin') {
       return (
         <div className="empty-state">
-          <div className="empty-icon">🗂️</div>
+          <div className="empty-icon-wrapper">
+            <FolderOpen size={48} strokeWidth={1} />
+          </div>
           <h2>No Tasks Found</h2>
-          <p>No tasks match your filter criteria, or none have been created yet.</p>
-          <a href="/admin/" className="empty-cta-btn">⚙️ Go to Admin Panel to create tasks</a>
+          <p>No tasks match your filters or none have been created yet.</p>
+          <a href="/admin/" className="empty-cta-btn">
+            <Settings size={14} /> Go to Admin Panel
+          </a>
         </div>
       );
     }
     return (
       <div className="empty-state">
-        <div className="empty-icon">📭</div>
-        <h2>No Tasks Assigned</h2>
-        <p>You have no tasks assigned to you yet. Contact your admin to get started.</p>
+        <div className="empty-icon-wrapper">
+          <Inbox size={48} strokeWidth={1} />
+        </div>
+        <h2>All Caught Up!</h2>
+        <p>You have no tasks assigned to you right now. Great job!</p>
       </div>
     );
   }
@@ -26,15 +38,14 @@ function TaskTable({ tasks, user, highlightedTaskId }) {
     <div className="task-table-container">
       <div className="table-header">
         <div className="col-id">ID</div>
-        <div className="col-name">Task Name</div>
-        <div className="col-assigned">Assigned To</div>
-        <div className="col-start">Start Date</div>
+        <div className="col-name">Task Details</div>
+        <div className="col-assigned">Assignee</div>
         <div className="col-deadline">
-          Deadline <span className="sort-indicator">↑</span>
+          Deadline <ArrowUp size={12} className="sort-icon-active" />
         </div>
-        <div className="col-end">End Time</div>
         <div className="col-priority">Priority</div>
-        <div className="col-notes">Attachment</div>
+        <div className="col-status">Status</div>
+        <div className="col-notes">Files</div>
       </div>
       <div className="table-body">
         {tasks.map((task) => (
@@ -50,3 +61,4 @@ function TaskTable({ tasks, user, highlightedTaskId }) {
 }
 
 export default TaskTable;
+

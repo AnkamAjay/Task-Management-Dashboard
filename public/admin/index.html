@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="theme-sync.js"></script>
 </head>
 <body>
@@ -15,7 +16,7 @@
   <!-- HEADER -->
   <header class="header">
     <div class="header-brand">
-      <span class="brand-icon">⚙️</span>
+      <i data-lucide="settings" class="brand-lucide-icon"></i>
       <div>
         <h1>Task Admin Panel</h1>
         <span class="brand-badge">Full Access</span>
@@ -29,16 +30,16 @@
       <span class="admin-user-label" id="adminUserName"></span>
       <button class="logout-btn-admin" onclick="logout()">Logout</button>
       <a href="/admin/projects.html" class="view-dashboard-btn" style="background: #1f6feb; color: #fff; border:none; margin-right: 10px;">
-        📁 Projects
+        <i data-lucide="folder" style="width:14px;height:14px;"></i> Projects
       </a>
       <a href="/admin/users.html" class="view-dashboard-btn" style="background: #8250df; color: #fff; border:none; margin-right: 10px;">
-        👥 Users
+        <i data-lucide="users" style="width:14px;height:14px;"></i> Users
       </a>
       <a href="/admin/audit.html" class="view-dashboard-btn" style="background: #d29922; color: #fff; border:none; margin-right: 10px;">
-        📜 Audit Logs
+        <i data-lucide="clipboard-list" style="width:14px;height:14px;"></i> Audit Logs
       </a>
       <a href="/" target="_blank" class="view-dashboard-btn">
-        📋 View Dashboard
+        <i data-lucide="external-link" style="width:14px;height:14px;"></i> View Dashboard
       </a>
     </div>
   </header>
@@ -49,7 +50,7 @@
     <!-- FORM PANEL -->
     <aside class="form-panel">
       <div class="panel-header">
-        <h2 id="formTitle">➕ Add New Task</h2>
+        <h2 id="formTitle"><i data-lucide="plus-circle" style="width:18px;height:18px;vertical-align:middle;"></i> Add New Task</h2>
         <button class="cancel-btn hidden" id="cancelEditBtn" onclick="cancelEdit()">✕ Cancel</button>
       </div>
 
@@ -101,9 +102,9 @@
           <label for="priority">Priority <span class="required">*</span></label>
           <select id="priority" required>
             <option value="">Select priority</option>
-            <option value="High">🔴 High</option>
-            <option value="Medium">🟠 Medium</option>
-            <option value="Low">🟢 Low</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
           </select>
         </div>
 
@@ -158,7 +159,7 @@
         </div>
 
         <button type="submit" class="submit-btn" id="submitBtn">
-          <span>➕ Add Task</span>
+          <i data-lucide="plus" style="width:16px;height:16px;"></i> <span>Add Task</span>
         </button>
       </form>
     </aside>
@@ -173,12 +174,15 @@
           </div>
           <h2>All Tasks <span class="task-count-badge" id="taskCount">0</span></h2>
           <div class="list-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search tasks..." oninput="renderTasks()" />
+            <div class="search-input-wrapper" style="position:relative; display:flex; align-items:center;">
+              <i data-lucide="search" style="position:absolute; left:10px; width:14px; height:14px; color:var(--text-muted);"></i>
+              <input type="text" id="searchInput" class="search-input" placeholder="Search tasks..." oninput="renderTasks()" style="padding-left:32px;" />
+            </div>
             <select id="filterPriority" class="filter-select" onchange="renderTasks()">
               <option value="All">All Priorities</option>
-              <option value="High">🔴 High</option>
-              <option value="Medium">🟠 Medium</option>
-              <option value="Low">🟢 Low</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
             </select>
           </div>
         </div>
@@ -214,7 +218,7 @@
             </select>
             <button class="bulk-apply-btn" onclick="handleBulkAction('status_change')">Update Status</button>
           </div>
-          <button class="bulk-delete-btn" onclick="handleBulkAction('delete')">🗑️ Delete Selected</button>
+          <button class="bulk-delete-btn" onclick="handleBulkAction('delete')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Delete Selected</button>
           <button class="bulk-cancel-btn" onclick="clearSelection()">Cancel</button>
         </div>
       </div>
@@ -240,5 +244,8 @@
   </div>
 
   <script src="admin.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

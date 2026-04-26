@@ -1,21 +1,32 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { 
+  Circle, 
+  RefreshCw, 
+  CheckCircle2, 
+  AlertCircle, 
+  Plus,
+  Calendar,
+  Ban,
+  Lock
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import Badge from './Badge';
 import './KanbanBoard.css';
 
 const STATUS_COLUMNS = ['Not Started', 'In Progress', 'Completed', 'Blocked'];
 
 const STATUS_CONFIG = {
-  'Not Started': { icon: '⚪', className: 'not-started' },
-  'In Progress': { icon: '🔵', className: 'in-progress' },
-  'Completed': { icon: '🟢', className: 'completed' },
-  'Blocked': { icon: '🔴', className: 'blocked' },
+  'Not Started': { icon: Circle, color: 'muted' },
+  'In Progress': { icon: RefreshCw, color: 'primary' },
+  'Completed': { icon: CheckCircle2, color: 'low' },
+  'Blocked': { icon: AlertCircle, color: 'high' },
 };
 
 const PRIORITY_CONFIG = {
-  High: { className: 'priority-high', icon: '🔴' },
-  Medium: { className: 'priority-medium', icon: '🟠' },
-  Low: { className: 'priority-low', icon: '🟢' },
+  High: { color: 'high', icon: AlertCircle },
+  Medium: { color: 'medium', icon: Circle },
+  Low: { color: 'low', icon: CheckCircle2 },
 };
 
 function isOverdue(deadlineStr) {
@@ -41,7 +52,6 @@ function KanbanCard({ task, onStatusChange, highlighted }) {
   const isDueSoon = timeRemaining && timeRemaining.total < 86400000;
   const isEffectivelyOverdue = overdue && task.status !== 'Completed';
 
-  // Update timer every 60s (Performance optimized for mentor)
   useEffect(() => {
     if (overdue || task.status === 'Completed') return;
     const interval = setInterval(() => {
@@ -50,7 +60,6 @@ function KanbanCard({ task, onStatusChange, highlighted }) {
     return () => clearInterval(interval);
   }, [task.deadline, overdue, task.status]);
 
-  // Ownership check: does the logged-in user own this task?
   const assignedUserId = typeof task.assignedTo === 'object' && task.assignedTo !== null
     ? (task.assignedTo.id || task.assignedTo._id)
     : task.assignedTo;
@@ -70,7 +79,7 @@ function KanbanCard({ task, onStatusChange, highlighted }) {
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      onStatusChange(); // Full refresh to move cards between columns
+      onStatusChange();
     } catch (err) {
       console.error(err);
       setLocalStatus(oldStatus);
@@ -80,71 +89,79 @@ function KanbanCard({ task, onStatusChange, highlighted }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString([], { month: 'short', day: '2-digit' });
+    return new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
   return (
     <div 
       id={`task-${task.id}`}
-      className={`kanban-card ${priority.className} ${overdue && localStatus !== 'Completed' ? 'overdue' : ''} ${isDueSoon && localStatus !== 'Completed' ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
+      className={`kanban-card priority-border-${task.priority.toLowerCase()} ${overdue && localStatus !== 'Completed' ? 'overdue' : ''} ${isDueSoon && localStatus !== 'Completed' ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
     >
       <div className="kanban-card-header">
-        {task.project && (
-          <span className="kanban-project-badge" style={{ background: task.project.color }}>
-            {task.project.name}
-          </span>
-        )}
-        <span className={`kanban-priority-badge ${priority.className}`}>
-          {priority.icon} {task.priority}
-        </span>
+        <div className="kanban-header-left">
+          {task.project && (
+            <Badge color="muted" tone="soft" size="sm">
+              {task.project.name}
+            </Badge>
+          )}
+        </div>
+        <Badge color={priority.color} tone="soft" icon={priority.icon} size="sm">
+          {task.priority}
+        </Badge>
       </div>
 
       <div className="kanban-task-body">
         <h4 className="kanban-task-name">{task.taskName}</h4>
-        {task.isBillable && (
-          <span className="kanban-billable-badge" title="Billable Task">$</span>
-        )}
-      </div>
-
-      {task.tags && task.tags.length > 0 && (
-        <div className="kanban-tags">
-          {task.tags.map(tag => (
-            <span key={tag} className="kanban-tag-chip">{tag}</span>
+        <div className="kanban-task-badges">
+          {task.isBillable && (
+            <Badge color="low" tone="soft" size="sm" title="Billable Task">$</Badge>
+          )}
+          {task.tags?.map(tag => (
+            <Badge key={tag} color="primary" tone="outline" size="sm">{tag}</Badge>
           ))}
         </div>
-      )}
+      </div>
 
       <div className="kanban-card-footer">
         {isDueSoon && localStatus !== 'Completed' && (
-          <div className="due-soon-badge-minimal pulse" style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: '700', marginBottom: '8px' }}>
+          <Badge color="warning" tone="soft" size="sm" className="pulse kanban-due-badge">
             Due in {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}{timeRemaining.hours}h {timeRemaining.minutes}m
-          </div>
+          </Badge>
         )}
-        <div className="kanban-footer-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="kanban-assignee" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="kanban-avatar" title={task.assignedTo?.name} style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', color: '#0d1117', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+        {overdue && localStatus !== 'Completed' && (
+          <Badge color="high" tone="solid" size="sm" className="kanban-due-badge">Overdue</Badge>
+        )}
+        
+        <div className="kanban-footer-row">
+          <div className="kanban-assignee">
+            <div className="kanban-avatar-circle" title={task.assignedTo?.name}>
               {task.assignedTo?.name?.charAt(0) || '?'}
             </div>
-            <span className="kanban-assignee-name" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{task.assignedTo?.name || 'Unassigned'}</span>
+            <span className="kanban-assignee-name">{task.assignedTo?.name?.split(' ')[0] || 'Unassigned'}</span>
           </div>
-          <div className={`kanban-deadline ${overdue && localStatus !== 'Completed' ? 'overdue-text' : ''}`} title="Deadline" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            📅 {formatDate(task.deadline)}
+          <div className={`kanban-deadline-group ${overdue && localStatus !== 'Completed' ? 'overdue' : ''}`}>
+            <Calendar size={12} />
+            <span>{formatDate(task.deadline)}</span>
           </div>
         </div>
       </div>
 
       <div className="kanban-card-actions">
-        <select
-          className={`kanban-status-select ${STATUS_CONFIG[localStatus]?.className}`}
-          value={localStatus}
-          onChange={handleStatusChange}
-          disabled={!canUpdateStatus}
-          title={isEffectivelyOverdue ? "Locked (Overdue)" : !canUpdateStatus ? "Not authorized" : "Update status"}
-        >
-          {STATUS_COLUMNS.map(s => (
-            <option key={s} value={s}>{STATUS_CONFIG[s].icon} {s}</option>
-          ))}
-        </select>
+        <div className="kanban-status-wrapper">
+          <select
+            className={`kanban-status-v2-select color-${STATUS_CONFIG[localStatus]?.color}`}
+            value={localStatus}
+            onChange={handleStatusChange}
+            disabled={!canUpdateStatus}
+          >
+            {STATUS_COLUMNS.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <div className="kanban-status-icon">
+            {isEffectivelyOverdue ? <Lock size={10} /> : React.createElement(STATUS_CONFIG[localStatus]?.icon || Circle, { size: 10 })}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -162,9 +179,11 @@ function KanbanBoard({ tasks, onRefresh, highlightedTaskId }) {
         {STATUS_COLUMNS.map(status => (
           <div key={status} className="kanban-column">
             <div className="kanban-column-header">
-              <span className="column-icon">{STATUS_CONFIG[status].icon}</span>
+              <div className={`column-status-icon color-${STATUS_CONFIG[status].color}`}>
+                {React.createElement(STATUS_CONFIG[status].icon, { size: 14 })}
+              </div>
               <h3>{status}</h3>
-              <span className="task-count-badge">{tasksByStatus[status].length}</span>
+              <span className="column-count-badge">{tasksByStatus[status].length}</span>
             </div>
             <div className="kanban-column-content">
               {tasksByStatus[status].length === 0 ? (
@@ -188,3 +207,4 @@ function KanbanBoard({ tasks, onRefresh, highlightedTaskId }) {
 }
 
 export default KanbanBoard;
+

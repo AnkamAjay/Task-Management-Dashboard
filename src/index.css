@@ -18,6 +18,7 @@
   --text-muted: #6e7681;
   --accent: #58a6ff;
   --accent-glow: rgba(88, 166, 255, 0.15);
+  --on-accent: #ffffff;
   --high-color: #f85149;
   --high-bg: rgba(248, 81, 73, 0.1);
   --high-border: rgba(248, 81, 73, 0.3);
@@ -27,6 +28,8 @@
   --low-color: #3fb950;
   --low-bg: rgba(63, 185, 80, 0.1);
   --low-border: rgba(63, 185, 80, 0.3);
+  --warning-color: #f59e0b;
+  --tag-color: #818cf8;
   --overdue-bg: rgba(248, 81, 73, 0.06);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
@@ -36,7 +39,6 @@
   --radius-lg: 14px;
   --transition: all 0.2s ease;
   --nav-bg: rgba(22, 27, 34, 0.85);
-  --on-accent: #ffffff;
 }
 
 :root[data-theme="light"] {
@@ -51,11 +53,13 @@
   --text-muted: #6e7781;
   --accent: #0969da;
   --accent-glow: rgba(9, 105, 218, 0.1);
+  --on-accent: #ffffff;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md: 0 3px 6px rgba(140,149,159,0.15);
   --shadow-lg: 0 8px 24px rgba(140,149,159,0.2);
   --nav-bg: rgba(255, 255, 255, 0.85);
-  /* Priority/status — punchier hex + slightly more opaque badge fills so chips stay legible on white. */
+  
+  /* Punchier priority colors for light mode to maintain legibility on white background */
   --high-color: #cf222e;
   --high-bg: rgba(207, 34, 46, 0.12);
   --high-border: rgba(207, 34, 46, 0.35);

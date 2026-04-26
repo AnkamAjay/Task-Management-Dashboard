@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { Bell } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
+
 import socket from '../utils/socket';
 import './Navbar.css';
 
@@ -110,7 +112,7 @@ function NotificationBell({ onNavigateToTask }) {
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
       <button className="bell-btn" onClick={toggleDropdown} title="Notifications">
-        <span className="bell-icon">🔔</span>
+        <Bell size={18} />
         {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
       </button>
       

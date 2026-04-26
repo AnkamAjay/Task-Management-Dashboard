@@ -1,4 +1,15 @@
 import { useState, useEffect } from 'react';
+import { 
+  Pin, 
+  CheckCircle2, 
+  XCircle, 
+  Mail, 
+  Clock, 
+  Bell, 
+  Check, 
+  X,
+  Hourglass
+} from 'lucide-react';
 import './Navbar.css';
 
 function getTimeRemaining(deadline) {
@@ -17,14 +28,14 @@ function LiveTimer({ deadline }) {
       const remaining = getTimeRemaining(deadline);
       setTimeLeft(remaining);
       if (!remaining) clearInterval(interval);
-    }, 60000); // Update every 1 minute
+    }, 60000); 
     return () => clearInterval(interval);
   }, [deadline]);
 
   if (!timeLeft) return <span className="timer-expired">Expired</span>;
   return (
-    <span className="live-timer">
-      ⏳ {timeLeft.hours}h {timeLeft.minutes}m left
+    <span className="live-timer-v2">
+      <Hourglass size={12} /> {timeLeft.hours}h {timeLeft.minutes}m left
     </span>
   );
 }
@@ -34,12 +45,12 @@ function NotificationDropdown({ notifications, onMarkAsRead, onMarkAllAsRead, on
 
   const getIcon = (type) => {
     switch (type) {
-      case 'task_assigned': return '📌';
-      case 'timesheet_approved': return '✅';
-      case 'timesheet_rejected': return '❌';
-      case 'timesheet_submitted': return '📩';
-      case 'deadline_approaching': return '⏰';
-      default: return '📢';
+      case 'task_assigned': return <Pin size={16} />;
+      case 'timesheet_approved': return <CheckCircle2 size={16} className="text-low" />;
+      case 'timesheet_rejected': return <XCircle size={16} className="text-high" />;
+      case 'timesheet_submitted': return <Mail size={16} className="text-warning" />;
+      case 'deadline_approaching': return <Clock size={16} className="text-warning" />;
+      default: return <Bell size={16} />;
     }
   };
 
@@ -57,42 +68,45 @@ function NotificationDropdown({ notifications, onMarkAsRead, onMarkAllAsRead, on
     <div className="notification-dropdown">
       <div className="dropdown-header">
         <h3>Notifications</h3>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div className="header-actions">
           {unreadCount > 0 && (
             <button 
-              className="mark-all-read-btn" 
+              className="mark-all-read-v2" 
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkAllAsRead();
               }}
             >
-              ✓ Mark All Read
+              <Check size={14} /> Mark all read
             </button>
           )}
-          <button className="close-dropdown" onClick={onClose}>✕</button>
+          <button className="close-dropdown-v2" onClick={onClose}><X size={16} /></button>
         </div>
       </div>
       <div className="notification-list">
         {notifications.length === 0 ? (
-          <div className="empty-notifications">No new notifications</div>
+          <div className="empty-notifications">
+            <Bell size={32} strokeWidth={1} />
+            <p>No new notifications</p>
+          </div>
         ) : (
           notifications.map(notification => (
             <div 
               key={notification.id} 
-              className={`notification-item ${notification.read ? 'read' : 'unread'}`} 
+              className={`notification-item-v2 ${notification.read ? 'read' : 'unread'}`} 
               onClick={() => handleItemClick(notification)}
             >
-              <div className="notification-icon">{getIcon(notification.type)}</div>
-              <div className="notification-content">
-                <p className="notification-message">{notification.message}</p>
+              <div className="notification-icon-wrapper">{getIcon(notification.type)}</div>
+              <div className="notification-body">
+                <p className="notification-msg">{notification.message}</p>
                 {notification.type === 'deadline_approaching' && notification.taskId?.deadline && (
-                  <div className="notification-timer">
+                  <div className="notification-timer-v2">
                     <LiveTimer deadline={notification.taskId.deadline} />
                   </div>
                 )}
-                <span className="notification-time">{new Date(notification.createdAt).toLocaleString()}</span>
+                <span className="notification-timestamp">{new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}</span>
               </div>
-              {!notification.read && <div className="unread-dot"></div>}
+              {!notification.read && <div className="unread-indicator-dot"></div>}
             </div>
           ))
         )}
@@ -102,3 +116,4 @@ function NotificationDropdown({ notifications, onMarkAsRead, onMarkAllAsRead, on
 }
 
 export default NotificationDropdown;
+

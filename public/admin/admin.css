@@ -98,8 +98,8 @@ body {
 .brand-badge {
   font-size: 0.66rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 1px;
-  background: rgba(240,136,62,0.15); color: #f0883e;
-  border: 1px solid rgba(240,136,62,0.3);
+  background: var(--medium-bg); color: var(--medium-color);
+  border: 1px solid var(--medium-border);
   padding: 2px 8px; border-radius: 20px; margin-top: 2px; display: block;
 }
 
@@ -225,9 +225,9 @@ textarea { resize: vertical; min-height: 70px; }
 
 .submit-btn {
   width: 100%; padding: 11px;
-  background: linear-gradient(135deg, #1f6feb, #388bfd);
+  background: var(--accent);
   border: none; border-radius: var(--radius);
-  color: #fff; font-size: 0.9rem; font-weight: 700;
+  color: var(--on-accent); font-size: 0.9rem; font-weight: 700;
   cursor: pointer; transition: var(--transition);
   margin-top: 8px; letter-spacing: 0.2px;
 }
@@ -246,8 +246,21 @@ textarea { resize: vertical; min-height: 70px; }
   padding: 2px 9px; border-radius: 20px;
 }
 .list-controls { display: flex; gap: 10px; }
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.search-input-wrapper i {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
 .search-input {
-  padding: 8px 14px; background: var(--bg-3); border: 1px solid var(--border);
+  padding: 8px 14px 8px 34px !important; 
+  background: var(--bg-3); border: 1px solid var(--border);
   border-radius: var(--radius); color: var(--text); font-size: 0.85rem;
   font-family: inherit; outline: none; width: 220px; transition: var(--transition);
 }
@@ -315,7 +328,7 @@ textarea { resize: vertical; min-height: 70px; }
 .avatar-row { display: flex; align-items: center; gap: 7px; }
 .avatar-sm {
   width: 24px; height: 24px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #a371f7);
+  background: linear-gradient(135deg, var(--accent), var(--tag-color));
   color: var(--on-accent); font-size: 0.7rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
@@ -402,7 +415,7 @@ textarea { resize: vertical; min-height: 70px; }
 /* ── SPINNER INLINE ─────────────────────────────────── */
 .spinner-inline {
   display: inline-block; width: 14px; height: 14px;
-  border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--on-accent);
   border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -428,7 +441,7 @@ textarea { resize: vertical; min-height: 70px; }
   padding: 2px 8px;
   border-radius: 12px;
   background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  color: var(--tag-color);
   font-size: 0.75rem;
   font-weight: 600;
   border: 1px solid rgba(99, 102, 241, 0.25);
@@ -488,7 +501,7 @@ textarea { resize: vertical; min-height: 70px; }
   width: 20px; height: 20px;
   background: var(--accent);
   border-radius: 50%;
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.6rem;
   font-weight: 700;
   display: flex; align-items: center; justify-content: center;
@@ -520,7 +533,7 @@ textarea { resize: vertical; min-height: 70px; }
 }
 .admin-comment-btn {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   border-radius: 6px;
   padding: 0 12px;
@@ -561,7 +574,7 @@ select[multiple] option {
 
 select[multiple] option:checked {
   background: var(--accent) !important;
-  color: #000 !important;
+  color: var(--on-accent) !important;
 }
 
 /* ── Bulk Actions ────────────────────────────────── */

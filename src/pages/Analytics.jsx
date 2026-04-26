@@ -6,10 +6,20 @@ import {
 } from 'recharts';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Download, PieChart as PieIcon, BarChart3, Clock, TrendingUp } from 'lucide-react';
+import { 
+  Download, 
+  PieChart as PieIcon, 
+  BarChart3, 
+  Clock, 
+  TrendingUp,
+  DollarSign,
+  Calendar,
+  Filter
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Badge from '../components/Badge';
 import './Analytics.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -28,7 +38,6 @@ const formatISO = (date) => date ? date.toISOString().split('T')[0] : '';
 export default function Analytics() {
   const { token, user } = useAuth();
   
-  // Filters
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -38,18 +47,16 @@ export default function Analytics() {
   const [groupBy, setGroupBy] = useState('task');
   const [selectedProjectId, setSelectedProjectId] = useState('');
   
-  // Data
   const [summary, setSummary] = useState([]);
   const [detailed, setDetailed] = useState([]);
   const [billing, setBilling] = useState({ totalEarned: 0, billableHours: 0 });
   const [projects, setProjects] = useState([]);
   const [productivity, setProductivity] = useState([]);
   const [budgetData, setBudgetData] = useState(null);
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'productivity'
+  const [activeTab, setActiveTab] = useState('analytics'); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch projects for filter
     axios.get(`${API_BASE}/api/projects`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setProjects(res.data))
       .catch(err => console.error(err));
@@ -70,7 +77,6 @@ export default function Analytics() {
         setDetailed(detRes.data);
         setBilling(billRes.data);
 
-        // Fetch productivity if admin
         if (user?.role === 'admin') {
           const prodRes = await axios.get(`${API_BASE}/api/reports/productivity?${query}`, { headers: { Authorization: `Bearer ${token}` } });
           setProductivity(prodRes.data);
@@ -108,7 +114,7 @@ export default function Analytics() {
     return formatDuration(sec);
   }, [summary]);
 
-  const billableHours = useMemo(() => {
+  const billableHoursLabel = useMemo(() => {
     const sec = summary.reduce((acc, curr) => acc + (curr.billableSeconds || 0), 0);
     return formatDuration(sec);
   }, [summary]);
@@ -182,179 +188,163 @@ export default function Analytics() {
   return (
     <div className="app-wrapper">
       <Navbar />
-      <main className="main-content" style={{ paddingTop: '20px' }}>
+      <main className="main-content">
         <div className="analytics-container">
           
           <div className="analytics-header">
             <div className="analytics-title">
-              <h2>Time Reports & Analytics</h2>
-              <p>Analyze productivity and tracked hours across your team</p>
+              <h2>Team Analytics</h2>
+              <p>Track performance, billing, and budget consumption.</p>
             </div>
 
-            {user?.role === 'admin' && (
-              <div className="tab-switcher">
-                <button 
-                  className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('analytics')}
-                >
-                  <BarChart3 size={18} />
-                  Analytics
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'productivity' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('productivity')}
-                >
-                  <TrendingUp size={18} />
-                  Productivity
-                </button>
-              </div>
-            )}
-
-            <div className="controls-group">
-              <div className="filter-item">
-                <label>Date Range</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <DatePicker 
-                    selected={startDate} 
-                    onChange={date => setStartDate(date)} 
-                    className="date-picker-input"
-                    placeholderText="From"
-                  />
-                  <DatePicker 
-                    selected={endDate} 
-                    onChange={date => setEndDate(date)} 
-                    className="date-picker-input"
-                    placeholderText="To"
-                  />
+            <div className="analytics-controls">
+              {user?.role === 'admin' && (
+                <div className="tab-switcher-v2">
+                  <button 
+                    className={`tab-item ${activeTab === 'analytics' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('analytics')}
+                  >
+                    <BarChart3 size={16} /> Analytics
+                  </button>
+                  <button 
+                    className={`tab-item ${activeTab === 'productivity' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('productivity')}
+                  >
+                    <TrendingUp size={16} /> Productivity
+                  </button>
                 </div>
-              </div>
+              )}
 
-              <div className="filter-item">
-                <label>Group By</label>
-                <select className="analytics-select" value={groupBy} onChange={e => setGroupBy(e.target.value)}>
-                  <option value="task">Task</option>
-                  <option value="project">Project</option>
-                  <option value="user">User</option>
-                </select>
-              </div>
+              <div className="filter-toolbar">
+                <div className="filter-pill">
+                  <Calendar size={14} />
+                  <DatePicker selected={startDate} onChange={date => setStartDate(date)} className="clean-dp" />
+                  <span>to</span>
+                  <DatePicker selected={endDate} onChange={date => setEndDate(date)} className="clean-dp" />
+                </div>
 
-              <div className="filter-item">
-                <label>Project</label>
-                <select className="analytics-select" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
-                  <option value="">All Projects</option>
-                  {projects.map(p => (
-                    <option key={p._id} value={p._id}>{p.name}</option>
-                  ))}
-                </select>
+                <div className="filter-pill">
+                  <Filter size={14} />
+                  <select value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+                    <option value="task">By Task</option>
+                    <option value="project">By Project</option>
+                    <option value="user">By User</option>
+                  </select>
+                </div>
+
+                <div className="filter-pill">
+                  <FolderOpen size={14} />
+                  <select value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
+                    <option value="">All Projects</option>
+                    {projects.map(p => (
+                      <option key={p._id} value={p._id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           {activeTab === 'analytics' ? (
             <>
-              <div className="summary-stats">
-                <div className="stat-box">
-                  <div className="label">Total Tracked</div>
-                  <div className="value">{totalHours}</div>
+              <div className="summary-grid">
+                <div className="summary-card">
+                  <div className="card-icon"><Clock size={24} /></div>
+                  <div className="card-info">
+                    <div className="label">Total Tracked</div>
+                    <div className="value">{totalHours}</div>
+                  </div>
                 </div>
-                <div className="stat-box">
-                  <div className="label">Billable Hrs</div>
-                  <div className="value" style={{ color: 'var(--success)' }}>{billableHours}</div>
+                <div className="summary-card billable">
+                  <div className="card-icon"><Badge color="low" tone="soft" icon={CheckCircle2} /></div>
+                  <div className="card-info">
+                    <div className="label">Billable Hours</div>
+                    <div className="value">{billableHoursLabel}</div>
+                  </div>
                 </div>
-                <div className="stat-box" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                  <div className="label">Total Earned</div>
-                  <div className="value" style={{ color: '#10b981' }}>
-                    ${(billing.totalEarned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <div className="summary-card earnings">
+                  <div className="card-icon"><DollarSign size={24} /></div>
+                  <div className="card-info">
+                    <div className="label">Total Revenue</div>
+                    <div className="value">
+                      ${(billing.totalEarned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {budgetData && (
-                <div className="budget-widget-card" style={{ 
-                  background: 'var(--bg-secondary)', 
-                  border: '1px solid var(--border)', 
-                  borderRadius: '16px', 
-                  padding: '24px', 
-                  marginBottom: '24px' 
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                    <TrendingUp size={24} color="var(--accent)" />
-                    <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Project Budget Tracking: {budgetData.project.name}</h3>
+                <div className="budget-container">
+                  <div className="budget-header">
+                    <h3>Budget Consumption: {budgetData.project.name}</h3>
+                    <Badge color={budgetData.hoursPercent >= 100 ? 'high' : budgetData.hoursPercent >= 80 ? 'warning' : 'low'} tone="soft">
+                      {budgetData.hoursPercent.toFixed(0)}% Utilized
+                    </Badge>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-                    {/* Hours Budget */}
+                  <div className="budget-bars">
                     {budgetData.project.budgetHours > 0 && (
                       <div className="budget-item">
-                        <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Hours Consumption</span>
-                          <span style={{ fontWeight: '600', color: budgetData.hoursPercent >= 100 ? 'var(--error)' : budgetData.hoursPercent >= 80 ? 'var(--warning)' : 'var(--success)' }}>
-                            {budgetData.actualHours.toFixed(1)} / {budgetData.project.budgetHours}h ({budgetData.hoursPercent.toFixed(0)}%)
-                          </span>
+                        <div className="item-meta">
+                          <span>Hours consumed</span>
+                          <span>{budgetData.actualHours.toFixed(1)} / {budgetData.project.budgetHours}h</span>
                         </div>
-                        <div style={{ height: '10px', background: 'var(--bg-hover)', borderRadius: '5px', overflow: 'hidden' }}>
-                          <div style={{ 
-                            height: '100%', 
-                            width: `${Math.min(100, budgetData.hoursPercent)}%`, 
-                            background: budgetData.hoursPercent >= 100 ? 'var(--error)' : budgetData.hoursPercent >= 80 ? 'var(--warning)' : 'var(--accent)',
-                            transition: 'width 0.5s ease'
-                          }}></div>
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ 
+                            width: `${Math.min(100, budgetData.hoursPercent)}%`,
+                            backgroundColor: budgetData.hoursPercent >= 100 ? 'var(--high-color)' : budgetData.hoursPercent >= 80 ? 'var(--warning-color)' : 'var(--accent)'
+                          }} />
                         </div>
-                        {budgetData.hoursPercent >= 100 && (
-                          <div style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: '4px' }}>⚠️ Over budget by {(budgetData.actualHours - budgetData.project.budgetHours).toFixed(1)}h</div>
-                        )}
                       </div>
                     )}
 
-                    {/* Money Budget */}
                     {budgetData.project.budgetAmount > 0 && (
                       <div className="budget-item">
-                        <div style={{ display: 'flex', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Budget Consumption ($)</span>
-                          <span style={{ fontWeight: '600', color: budgetData.amountPercent >= 100 ? 'var(--error)' : budgetData.amountPercent >= 80 ? 'var(--warning)' : 'var(--success)' }}>
-                            ${budgetData.actualAmount.toLocaleString()} / ${budgetData.project.budgetAmount.toLocaleString()} ({budgetData.amountPercent.toFixed(0)}%)
-                          </span>
+                        <div className="item-meta">
+                          <span>Financial budget</span>
+                          <span>${budgetData.actualAmount.toLocaleString()} / ${budgetData.project.budgetAmount.toLocaleString()}</span>
                         </div>
-                        <div style={{ height: '10px', background: 'var(--bg-hover)', borderRadius: '5px', overflow: 'hidden' }}>
-                          <div style={{ 
-                            height: '100%', 
-                            width: `${Math.min(100, budgetData.amountPercent)}%`, 
-                            background: budgetData.amountPercent >= 100 ? 'var(--error)' : budgetData.amountPercent >= 80 ? 'var(--warning)' : 'var(--accent)',
-                            transition: 'width 0.5s ease'
-                          }}></div>
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ 
+                            width: `${Math.min(100, budgetData.amountPercent)}%`,
+                            backgroundColor: budgetData.amountPercent >= 100 ? 'var(--high-color)' : budgetData.amountPercent >= 80 ? 'var(--warning-color)' : 'var(--accent)'
+                          }} />
                         </div>
-                        {budgetData.amountPercent >= 100 && (
-                          <div style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: '4px' }}>⚠️ Over budget by ${(budgetData.actualAmount - budgetData.project.budgetAmount).toLocaleString()}</div>
-                        )}
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              <div className="charts-grid">
-                <div className="chart-card">
-                  <h3><BarChart3 size={20} color="var(--accent)" /> Hours by {groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}</h3>
-                  <div style={{ width: '100%', height: 350 }}>
-                    <ResponsiveContainer>
+              <div className="charts-container">
+                <div className="chart-wrapper">
+                  <div className="chart-header">
+                    <h4>Hours Distribution</h4>
+                    <BarChart3 size={16} />
+                  </div>
+                  <div className="chart-box">
+                    <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                        <XAxis dataKey="name" stroke="var(--text-muted)" />
-                        <YAxis stroke="var(--text-muted)" label={{ value: 'Hours', angle: -90, position: 'insideLeft', fill: 'var(--text-muted)' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} />
+                        <YAxis stroke="var(--text-muted)" fontSize={12} />
                         <Tooltip 
-                          contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
-                          itemStyle={{ color: 'var(--text-primary)' }}
+                          contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px' }}
+                          cursor={{ fill: 'var(--bg-hover)' }}
                         />
-                        <Bar dataKey="hours" name="Total Hours" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="hours" fill="var(--accent)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                <div className="chart-card">
-                  <h3><PieIcon size={20} color="var(--accent)" /> Billable Distribution</h3>
-                  <div style={{ width: '100%', height: 350 }}>
-                    <ResponsiveContainer>
+                <div className="chart-wrapper">
+                  <div className="chart-header">
+                    <h4>Billable vs Non-Billable</h4>
+                    <PieIcon size={16} />
+                  </div>
+                  <div className="chart-box">
+                    <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
                         <Pie
                           data={pieData}
@@ -362,7 +352,7 @@ export default function Analytics() {
                           cy="50%"
                           innerRadius={60}
                           outerRadius={80}
-                          paddingAngle={5}
+                          paddingAngle={8}
                           dataKey="value"
                         >
                           {pieData.map((entry, index) => (
@@ -370,107 +360,109 @@ export default function Analytics() {
                           ))}
                         </Pie>
                         <Tooltip />
-                        <Legend verticalAlign="bottom" height={36}/>
+                        <Legend iconType="circle" />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               </div>
 
-              <section className="report-table-section">
-                <div className="table-header-row">
-                  <h3>Detailed Log</h3>
-                  <button className="export-btn" onClick={exportCSV}>
-                    <Download size={18} />
-                    Export CSV
+              <div className="detailed-log-card">
+                <div className="card-header">
+                  <h3>Detailed Activity Log</h3>
+                  <button className="export-v2-btn" onClick={exportCSV}>
+                    <Download size={14} /> Export CSV
                   </button>
                 </div>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="report-table">
+                <div className="table-responsive">
+                  <table className="analytics-table">
                     <thead>
                       <tr>
                         <th>Task</th>
                         <th>User</th>
                         <th>Project</th>
-                        <th>Start Time</th>
+                        <th>Date</th>
                         <th>Duration</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}><LoadingSpinner /></td></tr>
+                        <tr><td colSpan={5} className="loading-td"><LoadingSpinner /></td></tr>
                       ) : detailed.length === 0 ? (
-                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No entries found for this range.</td></tr>
+                        <tr><td colSpan={5} className="empty-td">No entries found.</td></tr>
                       ) : detailed.map((entry, idx) => (
                         <tr key={idx}>
-                          <td>{entry.task?.taskName}</td>
+                          <td className="task-name">{entry.task?.taskName}</td>
                           <td>{entry.user?.name}</td>
-                          <td>{entry.task?.project?.name || 'None'}</td>
-                          <td>{new Date(entry.startTime).toLocaleString()}</td>
+                          <td>{entry.task?.project ? <Badge color="muted" tone="soft" size="sm">{entry.task.project.name}</Badge> : '—'}</td>
+                          <td>{new Date(entry.startTime).toLocaleDateString()}</td>
                           <td>{formatDuration(entry.duration)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </section>
+              </div>
             </>
           ) : (
-            <section className="report-table-section">
-              <div className="table-header-row">
-                <h3>Team Productivity Report</h3>
-                <button className="export-btn" onClick={exportProductivityCSV}>
-                  <Download size={18} />
-                  Export CSV
+            <div className="productivity-card">
+              <div className="card-header">
+                <h3>Team Efficiency & Performance</h3>
+                <button className="export-v2-btn" onClick={exportProductivityCSV}>
+                  <Download size={14} /> Export CSV
                 </button>
               </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="report-table">
+              <div className="table-responsive">
+                <table className="analytics-table">
                   <thead>
                     <tr>
                       <th>User</th>
                       <th>Total Hours</th>
-                      <th>Billable Hours</th>
                       <th>Billable %</th>
-                      <th>Completed</th>
-                      <th>Overdue</th>
+                      <th>Tasks</th>
                       <th>On-Time Rate</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}><LoadingSpinner /></td></tr>
+                      <tr><td colSpan={5} className="loading-td"><LoadingSpinner /></td></tr>
                     ) : productivity.length === 0 ? (
-                      <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No productivity data available.</td></tr>
+                      <tr><td colSpan={5} className="empty-td">No data available.</td></tr>
                     ) : productivity.map((u, idx) => (
                       <tr key={u.userId || idx}>
-                        <td style={{ fontWeight: '600' }}>
-                          <div>{u.name}</div>
-                          <div style={{ fontSize: '0.8em', color: 'var(--text-muted)', fontWeight: 'normal' }}>{u.email}</div>
+                        <td className="user-cell">
+                          <div className="user-avatar-mini">{u.name.charAt(0)}</div>
+                          <div className="user-info">
+                            <span className="name">{u.name}</span>
+                            <span className="email">{u.email}</span>
+                          </div>
                         </td>
                         <td>{u.totalHours.toFixed(1)}h</td>
-                        <td>{u.billableHours.toFixed(1)}h</td>
                         <td>
-                          <div className="progress-mini">
-                            <div className="progress-bar-mini" style={{ width: `${u.billablePercent}%`, background: 'var(--success)' }}></div>
+                          <div className="mini-progress-group">
+                            <div className="progress-label">{u.billablePercent.toFixed(0)}%</div>
+                            <div className="progress-track">
+                              <div className="progress-fill" style={{ width: `${u.billablePercent}%`, background: 'var(--low-color)' }} />
+                            </div>
                           </div>
-                          {u.billablePercent.toFixed(0)}%
                         </td>
-                        <td>{u.tasksCompleted}</td>
-                        <td style={{ color: u.tasksOverdue > 0 ? 'var(--error)' : 'inherit' }}>{u.tasksOverdue}</td>
                         <td>
-                           <span style={{ 
-                             color: u.onTimeRate > 80 ? 'var(--success)' : u.onTimeRate > 50 ? 'var(--warning)' : 'var(--error)'
-                           }}>
+                          <div className="task-stats">
+                            <span className="completed">{u.tasksCompleted} done</span>
+                            {u.tasksOverdue > 0 && <span className="overdue">{u.tasksOverdue} overdue</span>}
+                          </div>
+                        </td>
+                        <td>
+                           <Badge color={u.onTimeRate > 80 ? 'low' : u.onTimeRate > 50 ? 'warning' : 'high'} tone="soft">
                              {u.onTimeRate.toFixed(0)}%
-                           </span>
+                           </Badge>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </section>
+            </div>
           )}
 
         </div>
@@ -478,3 +470,4 @@ export default function Analytics() {
     </div>
   );
 }
+

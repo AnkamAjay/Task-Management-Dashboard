@@ -1,10 +1,5 @@
-/* src/pages/Timesheet.css */
 .timesheet-container {
-  padding: 0 24px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-  color: var(--text-primary);
-  animation: fadeIn 0.4s ease-out;
+  padding: 10px 20px 40px;
 }
 
 .timesheet-header {
@@ -12,11 +7,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  background: var(--bg-hover);
-  padding: 16px 24px;
+  background: var(--bg-card);
+  padding: 16px 20px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .week-nav {
@@ -25,432 +19,310 @@
   gap: 16px;
 }
 
-.week-nav button {
-  background: var(--bg-secondary);
+.nav-btn {
+  background: var(--bg-hover);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 8px 16px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
+  transition: var(--transition);
 }
 
-.week-nav button:hover {
-  background: var(--border);
-  color: #fff;
-}
-
-.week-nav span {
-  font-weight: 600;
-  font-size: 1.1rem;
-  min-width: 250px;
-  text-align: center;
+.nav-btn:hover {
+  border-color: var(--accent);
   color: var(--accent);
 }
 
-.user-switcher select {
-  padding: 8px 16px;
-  border-radius: 6px;
-  background: var(--bg-secondary);
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
   color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.timesheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-switcher-v2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-hover);
+  padding: 4px 12px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  font-size: 0.9rem;
-  min-width: 200px;
+}
+
+.user-switcher-v2 select {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
   cursor: pointer;
 }
 
-.timesheet-table-wrapper {
-  overflow-x: auto;
-  background: var(--bg-secondary);
+.submit-v2-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.submit-v2-btn:disabled {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.timesheet-card, .entries-card {
+  background: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  overflow: hidden;
+  margin-bottom: 32px;
 }
 
 .timesheet-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: right;
-}
-
-.timesheet-table th, .timesheet-table td {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
 }
 
 .timesheet-table th {
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--bg-hover);
-  letter-spacing: 0.5px;
-}
-
-.timesheet-table th.task-col, .timesheet-table td.task-col {
+  background: var(--bg-secondary);
+  padding: 12px 16px;
   text-align: left;
-  width: 30%;
-  border-right: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid var(--border);
 }
 
-.timesheet-table td.task-col {
-  font-weight: 500;
+.timesheet-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.task-col {
+  font-weight: 600;
   color: var(--text-primary);
-}
-
-.timesheet-table tbody tr {
-  transition: background 0.2s;
-}
-
-.timesheet-table tbody tr:hover td {
-  background: rgba(255,255,255,0.02);
+  max-width: 250px;
 }
 
 .empty-cell {
-  color: #4b5563; /* subtle muted dash */
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+.active-cell {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.row-total, .grand-total {
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .total-row {
-  background: rgba(99, 102, 241, 0.1);
-  font-weight: 700;
+  background: var(--bg-secondary);
 }
 
 .total-row td {
-  color: var(--accent);
+  font-weight: 700;
   border-bottom: none;
 }
 
-/* Approval workflow */
-.submission-status-badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+.loading-td, .empty-td {
+  padding: 80px !important;
+  text-align: center;
 }
 
-.submit-timesheet-btn {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.submit-timesheet-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.submit-timesheet-btn:not(:disabled):hover {
-  opacity: 0.85;
-}
-
-.approval-queue {
-  margin-top: 32px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.approval-list {
+.empty-state-mini {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.approval-card {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px 20px;
-  flex-wrap: wrap;
   gap: 12px;
-}
-
-.approval-user {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.approval-week {
-  font-size: 0.9rem;
-  color: var(--accent);
-  margin-top: 4px;
-}
-
-.approval-submitted {
-  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
-/* Time Entry Details Table */
-.entries-list-wrapper {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+/* Entry Details */
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .entries-list-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.entries-list-table th,
-.entries-list-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-primary);
 }
 
 .entries-list-table th {
-  background: rgba(22, 27, 34, 0.5);
-  font-weight: 600;
+  background: var(--bg-secondary);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
 }
 
-.entries-list-table tr:last-child td {
-  border-bottom: none;
+.entries-list-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-.entries-list-table tr:hover td {
-  background: var(--bg-hover);
-}
-
-.desc-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Modal Styling */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.edit-modal {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  width: 100%;
-  max-width: 500px;
-  padding: 24px;
-  box-shadow: var(--shadow-lg);
-}
-
-.edit-modal h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: var(--text-primary);
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.form-group input[type="datetime-local"],
-.form-group textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  background: var(--bg-main);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-family: inherit;
-  outline: none;
-}
-
-.form-group textarea {
-  height: 80px;
-  resize: vertical;
-}
-
-.billable-group label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.modal-actions button {
-  padding: 10px 20px;
-  border-radius: 6px;
+.task-name-cell {
   font-weight: 600;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.save-btn {
-  background: var(--accent);
-  color: white;
-  border: none;
-}
-
-.save-btn:hover {
-  filter: brightness(1.1);
-}
-
-.save-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cancel-btn {
-  background: transparent;
-  border: 1px solid var(--border);
   color: var(--text-primary);
 }
 
-.cancel-btn:hover {
-  background: var(--bg-hover);
-}
-
-/* Time Entry Action Buttons */
-.edit-entry-btn, .delete-entry-btn {
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid var(--border);
-}
-
-.edit-entry-btn {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.edit-entry-btn:hover:not(:disabled) {
-  background: var(--border);
-}
-
-.delete-entry-btn {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.2);
-}
-
-.delete-entry-btn:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.2);
-}
-
-.edit-entry-btn:disabled, .delete-entry-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed !important;
-  filter: grayscale(1);
+.billable-icon {
+  color: var(--low-color);
 }
 
 .actions-cell {
   display: flex;
-  gap: 8px;
   justify-content: center;
-}
-
-.approval-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.approve-btn {
-  padding: 7px 16px;
-  border-radius: 6px;
-  border: none;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.approve-btn:hover { background: rgba(16, 185, 129, 0.3); }
-
-.reject-btn {
-  padding: 7px 16px;
-  border-radius: 6px;
-  border: none;
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.reject-btn:hover { background: rgba(239, 68, 68, 0.3); }
-
-.cancel-btn {
-  padding: 7px 16px;
-  border-radius: 6px;
-  border: none;
-  background: var(--bg-secondary);
-  color: var(--text-muted);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.reject-form {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
-.reject-form input {
-  padding: 7px 12px;
+.action-btn {
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
-  background: var(--bg-secondary);
   border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  min-width: 200px;
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.action-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.action-btn.delete:hover:not(:disabled) {
+  border-color: var(--high-color);
+  color: var(--high-color);
+}
+
+.action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Approval Queue */
+.approval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.approval-card-v2 {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.approval-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar-small {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-text .name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-text .date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.approval-actions-v2 {
+  display: flex;
+  gap: 8px;
+}
+
+.approve-v2-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--low-bg);
+  color: var(--low-color);
+  border: 1px solid var(--low-border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reject-v2-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--high-bg);
+  color: var(--high-color);
+  border: 1px solid var(--high-border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
 }

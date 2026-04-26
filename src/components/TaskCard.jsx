@@ -1,20 +1,38 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { 
+  Play, 
+  Square, 
+  Clock, 
+  Download, 
+  MessageSquare, 
+  AlertCircle,
+  CheckCircle2,
+  Circle,
+  Lock,
+  Calendar,
+  User,
+  MoreVertical,
+  History,
+  Send,
+  Ban
+} from 'lucide-react';
 import './TaskCard.css';
 import { useTimer } from '../contexts/TimerContext';
 import { useAuth } from '../contexts/AuthContext';
+import Badge from './Badge';
 
 const PRIORITY_CONFIG = {
-  High: { label: 'High', className: 'priority-high', icon: '🔴' },
-  Medium: { label: 'Medium', className: 'priority-medium', icon: '🟠' },
-  Low: { label: 'Low', className: 'priority-low', icon: '🟢' },
+  High: { label: 'High', color: 'high', icon: AlertCircle },
+  Medium: { label: 'Medium', color: 'medium', icon: Circle },
+  Low: { label: 'Low', color: 'low', icon: CheckCircle2 },
 };
 
 const STATUS_CONFIG = {
-  'Not Started': { className: 'status-not-started', icon: '⚪' },
-  'In Progress': { className: 'status-in-progress',  icon: '🔵' },
-  'Completed':   { className: 'status-completed',    icon: '🟢' },
-  'Blocked':     { className: 'status-blocked',      icon: '🔴' },
+  'Not Started': { color: 'muted', icon: Circle },
+  'In Progress': { color: 'primary', icon: History },
+  'Completed':   { color: 'low', icon: CheckCircle2 },
+  'Blocked':     { color: 'high', icon: Ban },
 };
 
 function formatDateTime(dateStr) {
@@ -87,17 +105,14 @@ function TaskCard({ task, highlighted }) {
     setLocalStatus(task.status);
   }, [task.status]);
   
-  // Handle both populated task { id, name } and unpopulated task (string ID) from recent API response
   const activeTaskId = typeof activeEntry?.task === 'object' ? activeEntry.task?.id : activeEntry?.task;
   const isRunning = activeTaskId === String(task.id);
   
-  // Ownership check: does the logged-in user own this task?
   const assignedUserId = typeof task.assignedTo === 'object' && task.assignedTo !== null 
     ? task.assignedTo.id || task.assignedTo._id 
     : task.assignedTo;
   const isOwner = assignedUserId && user && String(assignedUserId) === String(user.id);
   
-  // If timer is suddenly running, auto-promote to In Progress visually
   useEffect(() => {
     if (isRunning && localStatus === 'Not Started') {
       setLocalStatus('In Progress');
@@ -107,7 +122,6 @@ function TaskCard({ task, highlighted }) {
   const isEffectivelyOverdue = overdue && localStatus !== 'Completed';
   const isDueSoon = timeRemaining && timeRemaining.total < 86400000; // 24 hours
 
-  // Force stop the timer immediately if the deadline crossover occurs while running
   useEffect(() => {
     if (isEffectivelyOverdue && isRunning) {
       stopTimer();
@@ -117,7 +131,7 @@ function TaskCard({ task, highlighted }) {
   const handleStatusChange = async (e) => {
     const newStatus = e.target.value;
     const oldStatus = localStatus;
-    setLocalStatus(newStatus); // Optimistic UI update
+    setLocalStatus(newStatus);
     
     try {
       const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -127,18 +141,16 @@ function TaskCard({ task, highlighted }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // If marked Completed, and timer is running, stop the timer auto!
       if (newStatus === 'Completed' && isRunning) {
          stopTimer();
       }
 
-      // Refresh activities if panel is open
       if (showActivities) {
         loadActivities();
       }
     } catch (err) {
       console.error(err);
-      setLocalStatus(oldStatus); // Revert
+      setLocalStatus(oldStatus);
       alert('Failed to update status');
     }
   };
@@ -189,223 +201,194 @@ function TaskCard({ task, highlighted }) {
   return (
     <div 
       id={`task-${task.id}`}
-      className={`task-row ${priority.className} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
+      className={`task-row priority-border-${task.priority.toLowerCase()} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
     >
       <div className="col-id">
-        <span className="task-id">#{task.id}</span>
+        <span className="task-id">#{String(task.id).slice(-4)}</span>
       </div>
 
       <div className="col-name">
-        {task.project && (
-          <span className="project-badge" style={{ background: task.project.color }}>
-            {task.project.name}
-          </span>
-        )}
-        <span className="task-name">
-          {task.taskName}
-          {task.recurring && task.recurring.enabled && (
-            <span className="recurring-badge" title={`Recurring: ${task.recurring.frequency}`}>🔁</span>
+        <div className="task-header-row">
+          {task.project && (
+            <Badge color="muted" tone="soft" size="sm">
+              {task.project.name}
+            </Badge>
           )}
-        </span>
-        
-        {task.isBillable && (
-          <span className="project-badge" style={{ background: '#10b981', marginLeft: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>$</span> Billable
+          <span className="task-name-text">
+            {task.taskName}
           </span>
-        )}
+          {task.recurring && task.recurring.enabled && (
+            <Badge color="primary" tone="soft" size="sm" icon={History} title={`Frequency: ${task.recurring.frequency}`} />
+          )}
+        </div>
         
+        <div className="task-meta-badges">
+          {task.isBillable && (
+            <Badge color="low" tone="soft" size="sm">
+              <span style={{ fontWeight: 'bold', marginRight: '2px' }}>$</span> Billable
+            </Badge>
+          )}
+          {task.tags?.map(tag => (
+            <Badge key={tag} color="primary" tone="outline" size="sm">{tag}</Badge>
+          ))}
+          {isBlocked && (
+            <Badge color="high" tone="soft" size="sm" icon={Ban}>
+              Blocked by: {incompleteBlockers.length}
+            </Badge>
+          )}
+          {overdue && localStatus !== 'Completed' && <Badge color="high" tone="solid" size="sm">Overdue</Badge>}
+          {isDueSoon && localStatus !== 'Completed' && (
+            <Badge color="warning" tone="soft" size="sm" className="pulse">
+              {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}{timeRemaining.hours}h {timeRemaining.minutes}m
+            </Badge>
+          )}
+        </div>
+
         {task.estimatedHours && (
-          <div className="estimate-bar-container">
-            <div 
-              className="estimate-fill" 
-              style={{ 
-                width: `${Math.min(100, ((task.trackedSeconds || 0) / 3600 / task.estimatedHours) * 100)}%`,
-                background: ((task.trackedSeconds || 0) / 3600) > task.estimatedHours ? '#ff7b72' : '#3fb950'
-              }}
-            />
-            <span className="estimate-label">
+          <div className="estimate-container">
+            <div className="estimate-bar">
+              <div 
+                className="estimate-progress" 
+                style={{ 
+                  width: `${Math.min(100, ((task.trackedSeconds || 0) / 3600 / task.estimatedHours) * 100)}%`,
+                  background: ((task.trackedSeconds || 0) / 3600) > task.estimatedHours ? 'var(--high-color)' : 'var(--low-color)'
+                }}
+              />
+            </div>
+            <span className="estimate-text">
               {((task.trackedSeconds || 0) / 3600).toFixed(1)}h / {task.estimatedHours}h
             </span>
           </div>
         )}
 
-        {task.tags && task.tags.length > 0 && (
-          <div className="task-tags">
-            {task.tags.map(tag => (
-              <span key={tag} className="tag-chip">{tag}</span>
-            ))}
-          </div>
-        )}
-
-        <div className="task-badges">
-          {isBlocked && (
-            <span className="blocked-badge-main" title={`Blocked by: ${incompleteBlockers.map(b => b.taskName).join(', ')}`}>
-              🚫 Blocked by: {incompleteBlockers.map(b => b.taskName).join(', ')}
-            </span>
+        <div className="task-row-actions">
+          {isOwner && (
+            localStatus === 'Completed' ? (
+              <Badge color="low" tone="soft" size="sm" icon={CheckCircle2}>Completed</Badge>
+            ) : isEffectivelyOverdue ? (
+              <Badge color="high" tone="soft" size="sm" icon={Lock}>Deadline Passed</Badge>
+            ) : isBlocked ? (
+              <Badge color="muted" tone="soft" size="sm" icon={Ban}>Blocked</Badge>
+            ) : (
+              <button 
+                className={`timer-action-btn ${isRunning ? 'running' : 'stopped'}`}
+                onClick={() => {
+                  const actionPromise = isRunning ? stopTimer() : startTimer(task.id);
+                  actionPromise.then(() => {
+                    if (showActivities) setTimeout(loadActivities, 500);
+                  });
+                }}
+              >
+                {isRunning ? <Square size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
+                {isRunning ? `Stop ${formatDuration(elapsed)}` : 'Start Timer'}
+              </button>
+            )
           )}
-          {overdue && localStatus !== 'Completed' && <span className="overdue-badge">Overdue</span>}
-          {isDueSoon && localStatus !== 'Completed' && (
-            <span className="due-soon-badge pulse">
-              Due in {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}{timeRemaining.hours}h {timeRemaining.minutes}m
-            </span>
-          )}
-          {localStatus && (
-            <select
-              className={`status-chip ${STATUS_CONFIG[localStatus]?.className}`}
-              value={localStatus}
-              onChange={handleStatusChange}
-              disabled={isEffectivelyOverdue}
-              style={{
-                fontFamily: 'inherit',
-                fontSize: '0.65rem',
-                padding: '2px 8px',
-                margin: '0',
-                cursor: isEffectivelyOverdue ? 'not-allowed' : 'pointer',
-                outline: 'none',
-                appearance: 'none',   // Removes default dropdown arrow
-                border: '1px solid transparent',
-                opacity: isEffectivelyOverdue ? 0.6 : 1,
-              }}
-              title={isEffectivelyOverdue ? "Locked (Overdue)" : "Click to update task status"}
+          
+          {(isOwner || user?.role === 'admin') && (
+            <button 
+              className={`activity-toggle-btn ${showActivities ? 'active' : ''}`}
+              onClick={toggleActivities}
             >
-              {Object.keys(STATUS_CONFIG).map(s => (
-                <option key={s} value={s} style={{ color: '#fff', background: '#333' }}>
-                  {STATUS_CONFIG[s].icon} {s}
-                </option>
-              ))}
-            </select>
+              <MessageSquare size={12} />
+              {activities.length > 0 ? activities.length : 'Activity'}
+            </button>
           )}
         </div>
-        
-        {isOwner && (
-          localStatus === 'Completed' ? (
-            <button className="timer-btn stopped" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-              ✔ Completed
-            </button>
-          ) : isEffectivelyOverdue ? (
-            <button className="timer-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed', color: '#ff7b72', background: 'rgba(248, 81, 73, 0.1)', borderColor: 'rgba(248, 81, 73, 0.4)' }}>
-              🔒 Deadline Passed
-            </button>
-          ) : isBlocked ? (
-            <button className="timer-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed', color: '#8b949e', background: 'rgba(139, 148, 158, 0.1)', borderColor: 'rgba(139, 148, 158, 0.4)' }}>
-              🚫 Blocked
-            </button>
-          ) : (
-            <button 
-              className={`timer-btn ${isRunning ? 'running' : 'stopped'}`}
-              onClick={() => {
-                const actionPromise = isRunning ? stopTimer() : startTimer(task.id);
-                actionPromise.then(() => {
-                  if (showActivities) setTimeout(loadActivities, 500); // Small delay to allow DB consistency
-                });
-              }}
-            >
-              {isRunning ? `⏹ Stop ${formatDuration(elapsed)}` : '▶ Start Timer'}
-            </button>
-          )
-        )}
-        
-        {(isOwner || user?.role === 'admin') && (
-          <button 
-            className="activity-toggle-btn"
-            onClick={toggleActivities}
-            title="View comments and activity log"
-          >
-            💬 Activity
-          </button>
-        )}
       </div>
 
       <div className="col-assigned">
-        <div className="avatar">{task.assignedTo?.name?.charAt(0) ?? '?'}</div>
-        <span>{task.assignedTo?.name ?? 'Unassigned'}</span>
-      </div>
-
-      <div className="col-start">
-        <span className="date-text">{formatDateTime(task.startDateTime)}</span>
+        <div className="user-avatar-circle" title={task.assignedTo?.name}>
+          {task.assignedTo?.name?.charAt(0) ?? '?'}
+        </div>
+        <span className="user-name-label">{task.assignedTo?.name?.split(' ')[0] ?? 'Unassigned'}</span>
       </div>
 
       <div className="col-deadline">
-        <span className={`date-text ${overdue ? 'overdue-date' : ''} ${isDueSoon ? 'due-soon-date' : ''}`}>
-          {formatDateTime(task.deadline)}
-        </span>
-      </div>
-
-      <div className="col-end">
-        <span className="date-text">{formatDateTime(task.endTime)}</span>
+        <div className={`deadline-group ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''}`}>
+          <Calendar size={12} />
+          <span>{new Date(task.deadline).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+        </div>
       </div>
 
       <div className="col-priority">
-        <span className={`priority-badge ${priority.className}`}>
-          {priority.icon} {priority.label}
-        </span>
+        <Badge color={priority.color} tone="soft" icon={priority.icon} size="sm">
+          {priority.label}
+        </Badge>
+      </div>
+
+      <div className="col-status">
+        <div className="status-select-wrapper">
+          <select
+            className={`status-v2-select color-${STATUS_CONFIG[localStatus]?.color}`}
+            value={localStatus}
+            onChange={handleStatusChange}
+            disabled={isEffectivelyOverdue}
+          >
+            {Object.keys(STATUS_CONFIG).map(s => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <div className="status-v2-indicator">
+            {React.createElement(STATUS_CONFIG[localStatus]?.icon || Circle, { size: 10 })}
+          </div>
+        </div>
       </div>
 
       <div className="col-notes">
         {task.notes ? (
-          isEffectivelyOverdue ? (
-            <span 
-              className="download-btn" 
-              style={{ opacity: 0.5, cursor: 'not-allowed', color: '#8b949e', borderColor: '#8b949e' }} 
-              title="Attachment locked (Deadline passed)"
-            >
-              <span className="download-icon">🔒</span>
-              <span className="file-name">{task.notes.fileName}</span>
-            </span>
-          ) : (
-            <a
-              href={task.notes.downloadUrl}
-              download={task.notes.fileName}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="download-btn"
-              title={`Download ${task.notes.fileName}`}
-            >
-              <span className="download-icon">⬇</span>
-              <span className="file-name">{task.notes.fileName}</span>
-            </a>
-          )
+          <a
+            href={task.notes.downloadUrl}
+            download={task.notes.fileName}
+            className={`file-v2-badge ${isEffectivelyOverdue ? 'locked' : ''}`}
+            title={isEffectivelyOverdue ? "Locked (Deadline passed)" : `Download ${task.notes.fileName}`}
+            onClick={(e) => isEffectivelyOverdue && e.preventDefault()}
+          >
+            {isEffectivelyOverdue ? <Lock size={12} /> : <Download size={12} />}
+            <span className="file-name-truncate">{task.notes.fileName}</span>
+          </a>
         ) : (
-          <span className="no-attachment">No file</span>
+          <span className="no-file-label">None</span>
         )}
       </div>
 
       {showActivities && (
-        <div className="activity-panel">
-          <div className="activity-feed">
+        <div className="expanded-activity-row">
+          <div className="activity-list-container">
             {loadingActivities ? (
-              <div className="activity-loading">Loading activity...</div>
+              <div className="activity-placeholder">Loading...</div>
             ) : activities.length === 0 ? (
-              <div className="activity-empty">No activity yet.</div>
+              <div className="activity-placeholder">No activity yet.</div>
             ) : (
               activities.map((act) => (
-                <div key={act.id} className={`activity-item ${act.type}`}>
-                  <div className="activity-user-avatar">
+                <div key={act.id} className={`activity-row-item ${act.type}`}>
+                  <div className="act-user-avatar">
                     {act.user?.name?.charAt(0).toUpperCase()}
                   </div>
-                  <div className="activity-content">
-                    <div className="activity-meta">
-                      <span className="activity-user-name">{act.user?.name}</span>
-                      <span className="activity-time">{new Date(act.createdAt).toLocaleString()}</span>
+                  <div className="act-content-block">
+                    <div className="act-header">
+                      <span className="act-user">{act.user?.name}</span>
+                      <span className="act-time">{new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <div className="activity-text">{act.text}</div>
+                    <div className="act-text-body">{act.text}</div>
                   </div>
                 </div>
               ))
             )}
+            <form className="mini-comment-form" onSubmit={handleAddComment}>
+              <input 
+                type="text" 
+                placeholder="Write a comment..." 
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+              />
+              <button type="submit" disabled={!newComment.trim()}>
+                <Send size={14} />
+              </button>
+            </form>
           </div>
-          <form className="comment-form" onSubmit={handleAddComment}>
-            <input 
-              type="text" 
-              placeholder="Add a comment..." 
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="comment-input"
-            />
-            <button type="submit" className="comment-submit-btn" disabled={!newComment.trim()}>
-              Post
-            </button>
-          </form>
         </div>
       )}
     </div>

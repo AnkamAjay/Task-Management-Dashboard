@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  Edit2, 
+  Trash2, 
+  Send,
+  Users,
+  Check,
+  AlertCircle
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Badge from '../components/Badge';
 import './Timesheet.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-// Date manipulation helpers
 const getMonday = (d) => {
   const date = new Date(d);
   const day = date.getDay(), diff = date.getDate() - day + (day === 0 ? -6 : 1);
@@ -38,10 +51,10 @@ const formatDuration = (seconds) => {
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const STATUS_STYLES = {
-  submitted: { background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', label: 'Pending Review' },
-  approved:  { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', label: 'Approved' },
-  rejected:  { background: 'rgba(239, 68, 68, 0.15)',  color: '#ef4444', label: 'Rejected' },
+const STATUS_CONFIG = {
+  submitted: { color: 'warning', icon: Clock, label: 'Pending Review' },
+  approved:  { color: 'low', icon: CheckCircle2, label: 'Approved' },
+  rejected:  { color: 'high', icon: XCircle, label: 'Rejected' },
 };
 
 export default function Timesheet() {
@@ -53,14 +66,12 @@ export default function Timesheet() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState('me');
 
-  // Approval workflow state
-  const [weekSubmission, setWeekSubmission] = useState(null); // current user's submission for this week
-  const [pendingSubmissions, setPendingSubmissions] = useState([]); // admin: all pending
+  const [weekSubmission, setWeekSubmission] = useState(null); 
+  const [pendingSubmissions, setPendingSubmissions] = useState([]); 
   const [submitLoading, setSubmitLoading] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
   const [rejectingId, setRejectingId] = useState(null);
 
-  // Edit Modal State
   const [editingEntry, setEditingEntry] = useState(null);
   const [editFormData, setEditFormData] = useState({
     startTime: '',
@@ -70,7 +81,7 @@ export default function Timesheet() {
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [allTasks, setAllTasks] = useState([]); // For task selection in modal
+  const [allTasks, setAllTasks] = useState([]); 
 
   const monday = useMemo(() => getMonday(currentDate), [currentDate]);
   const sunday = useMemo(() => getSunday(monday), [monday]);
@@ -124,14 +135,6 @@ export default function Timesheet() {
     }
   }, [user, token]);
 
-  useEffect(() => {
-    if (token) {
-      fetchTimesheet();
-      fetchSubmissionStatus();
-      fetchPendingSubmissions();
-    }
-  }, [user, token]);
-
   const fetchAllTasks = useCallback(async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/tasks`, { headers: authHeader });
@@ -148,7 +151,7 @@ export default function Timesheet() {
       fetchPendingSubmissions();
       fetchAllTasks();
     }
-  }, [fetchTimesheet, fetchSubmissionStatus, fetchPendingSubmissions, fetchAllTasks]);
+  }, [fetchTimesheet, fetchSubmissionStatus, fetchPendingSubmissions, fetchAllTasks, token]);
 
   const handleSubmit = async () => {
     setSubmitLoading(true);
@@ -198,7 +201,6 @@ export default function Timesheet() {
   };
 
   const handleEditClick = (entry) => {
-    // Helper to format ISO string to YYYY-MM-DDTHH:mm for datetime-local
     const formatForInput = (isoStr) => {
       if (!isoStr) return '';
       const date = new Date(isoStr);
@@ -227,7 +229,7 @@ export default function Timesheet() {
     try {
       await axios.put(`${API_BASE}/api/time-entries/${editingEntry.id}`, editFormData, { headers: authHeader });
       setIsEditModalOpen(false);
-      fetchTimesheet(); // Refresh list
+      fetchTimesheet();
     } catch (err) {
       console.error('Edit failed', err);
       alert(err.response?.data?.message || 'Failed to update time entry');
@@ -254,7 +256,6 @@ export default function Timesheet() {
 
     entries.forEach(entry => {
       if (!entry.task) return;
-      // Extract the correct string ID whether it's a raw string or a populated object
       const taskId = entry.task.id || entry.task._id || entry.task;
       const taskName = entry.task.taskName || 'Unknown Task';
 
@@ -278,24 +279,28 @@ export default function Timesheet() {
     return { rows: Object.values(taskMap), dayTotals, grandTotal };
   }, [entries, monday, sunday]);
 
-  const statusStyle = weekSubmission ? STATUS_STYLES[weekSubmission.status] : null;
+  const currentStatus = weekSubmission ? STATUS_CONFIG[weekSubmission.status] : null;
 
   return (
     <div className="app-wrapper">
       <Navbar />
-      <main className="main-content" style={{ paddingTop: '20px' }}>
+      <main className="main-content">
         <div className="timesheet-container">
 
           <div className="timesheet-header">
             <div className="week-nav">
-              <button onClick={handlePrevWeek}>&larr; Prev Week</button>
-              <span>{formatDate(monday)} &ndash; {formatDate(sunday)}</span>
-              <button onClick={handleNextWeek}>Next Week &rarr;</button>
+              <button className="nav-btn" onClick={handlePrevWeek}><ChevronLeft size={16} /></button>
+              <div className="date-range">
+                <Calendar size={16} />
+                <span>{formatDate(monday)} &ndash; {formatDate(sunday)}</span>
+              </div>
+              <button className="nav-btn" onClick={handleNextWeek}><ChevronRight size={16} /></button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="timesheet-actions">
               {user?.role === 'admin' && (
-                <div className="user-switcher">
+                <div className="user-switcher-v2">
+                  <Users size={16} />
                   <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
                     <option value="me">My Timesheet</option>
                     <optgroup label="Team Members">
@@ -307,86 +312,90 @@ export default function Timesheet() {
                 </div>
               )}
 
-              {/* Status badge */}
-              {statusStyle && (
-                <span className="submission-status-badge" style={{ background: statusStyle.background, color: statusStyle.color }}>
-                  {statusStyle.label}
+              {currentStatus && (
+                <Badge color={currentStatus.color} tone="soft" icon={currentStatus.icon}>
+                  {currentStatus.label}
                   {weekSubmission.status === 'rejected' && weekSubmission.adminNote && (
-                    <span style={{ marginLeft: '6px', fontSize: '0.75rem' }}>— {weekSubmission.adminNote}</span>
+                    <span className="reject-note"> : {weekSubmission.adminNote}</span>
                   )}
-                </span>
+                </Badge>
               )}
 
-              {/* Submit button — shown to non-admins or admins viewing their own sheet */}
               {(user?.role !== 'admin' || selectedUser === 'me') && (
                 <button
-                  className="submit-timesheet-btn"
+                  className="submit-v2-btn"
                   onClick={handleSubmit}
                   disabled={submitLoading || weekSubmission?.status === 'submitted' || weekSubmission?.status === 'approved'}
                 >
-                  {submitLoading ? 'Submitting…' :
-                    weekSubmission?.status === 'approved' ? 'Approved' :
-                    weekSubmission?.status === 'submitted' ? 'Submitted' :
-                    weekSubmission?.status === 'rejected' ? 'Resubmit' :
-                    'Submit for Approval'}
+                  {submitLoading ? <RefreshCw size={14} className="spin" /> : <Send size={14} />}
+                  {weekSubmission?.status === 'approved' ? 'Approved' :
+                   weekSubmission?.status === 'submitted' ? 'Submitted' :
+                   weekSubmission?.status === 'rejected' ? 'Resubmit' : 'Submit Week'}
                 </button>
               )}
             </div>
           </div>
 
-          <div className="timesheet-table-wrapper">
-            <table className="timesheet-table">
-              <thead>
-                <tr>
-                  <th className="task-col">Task Name</th>
-                  {DAYS.map(d => <th key={d}>{d}</th>)}
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+          <div className="timesheet-card">
+            <div className="timesheet-table-wrapper">
+              <table className="timesheet-table">
+                <thead>
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: '80px' }}>
-                      <LoadingSpinner />
-                    </td>
+                    <th className="task-col">Task Name</th>
+                    {DAYS.map(d => <th key={d}>{d}</th>)}
+                    <th>Total</th>
                   </tr>
-                ) : aggregatedData.rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: '80px', color: 'var(--text-muted)' }}>
-                      No time logged this week. Head back to the Dashboard to blast some timers!
-                    </td>
-                  </tr>
-                ) : (
-                  <>
-                    {aggregatedData.rows.map((row, idx) => (
-                      <tr key={idx}>
-                        <td className="task-col">{row.taskName}</td>
-                        {row.days.map((seconds, i) => (
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={9} className="loading-td">
+                        <LoadingSpinner />
+                      </td>
+                    </tr>
+                  ) : aggregatedData.rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="empty-td">
+                        <div className="empty-state-mini">
+                          <Clock size={32} strokeWidth={1} />
+                          <p>No time logged this week.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <>
+                      {aggregatedData.rows.map((row, idx) => (
+                        <tr key={idx}>
+                          <td className="task-col">{row.taskName}</td>
+                          {row.days.map((seconds, i) => (
+                            <td key={i} className={seconds === 0 ? 'empty-cell' : 'active-cell'}>
+                              {formatDuration(seconds)}
+                            </td>
+                          ))}
+                          <td className="row-total">{formatDuration(row.totalRow)}</td>
+                        </tr>
+                      ))}
+                      <tr className="total-row">
+                        <td className="task-col">Weekly Total</td>
+                        {aggregatedData.dayTotals.map((seconds, i) => (
                           <td key={i} className={seconds === 0 ? 'empty-cell' : ''}>
                             {formatDuration(seconds)}
                           </td>
                         ))}
-                        <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{formatDuration(row.totalRow)}</td>
+                        <td className="grand-total">{formatDuration(aggregatedData.grandTotal)}</td>
                       </tr>
-                    ))}
-                    <tr className="total-row">
-                      <td className="task-col">Weekly Total</td>
-                      {aggregatedData.dayTotals.map((seconds, i) => (
-                        <td key={i} className={seconds === 0 ? 'empty-cell' : ''}>
-                          {formatDuration(seconds)}
-                        </td>
-                      ))}
-                      <td>{formatDuration(aggregatedData.grandTotal)}</td>
-                    </tr>
-                  </>
-                )}
-              </tbody>
-            </table>
+                    </>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="time-entries-details" style={{ marginTop: '40px' }}>
-            <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>Time Entry Details</h3>
-            <div className="entries-list-wrapper">
+          <div className="time-entries-details">
+            <div className="section-header">
+              <h3><Clock size={18} /> Entry Details</h3>
+            </div>
+            <div className="entries-card">
               <table className="entries-list-table">
                 <thead>
                   <tr>
@@ -403,9 +412,7 @@ export default function Timesheet() {
                 <tbody>
                   {entries.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
-                        No individual entries found for this week.
-                      </td>
+                      <td colSpan={8} className="empty-td">No individual entries found.</td>
                     </tr>
                   ) : (
                     entries.map(entry => {
@@ -417,29 +424,31 @@ export default function Timesheet() {
                       return (
                         <tr key={entry.id}>
                           <td>{new Date(entry.startTime).toLocaleDateString()}</td>
-                          <td>{entry.task?.taskName || 'Unknown Task'}</td>
+                          <td className="task-name-cell">{entry.task?.taskName || 'Unknown Task'}</td>
                           <td className="desc-cell" title={entry.description}>{entry.description || '—'}</td>
-                          <td>{new Date(entry.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                          <td>{entry.endTime ? new Date(entry.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Running...'}</td>
-                          <td>{formatDuration(entry.duration)}</td>
-                          <td style={{ textAlign: 'center' }}>{entry.billable ? '✅' : '—'}</td>
+                          <td className="time-cell">{new Date(entry.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                          <td className="time-cell">{entry.endTime ? new Date(entry.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Running...'}</td>
+                          <td className="duration-cell">{formatDuration(entry.duration)}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            {entry.billable ? <Check size={16} className="billable-icon" /> : <span className="muted-dash">—</span>}
+                          </td>
                           <td style={{ textAlign: 'center' }}>
                             <div className="actions-cell">
                               <button 
-                                className="edit-entry-btn" 
+                                className="action-btn edit" 
                                 onClick={() => handleEditClick(entry)}
                                 disabled={!canModify}
-                                title={isLocked ? "Locked (Week Approved)" : !isOwner ? "Only owners can edit" : "Edit entry"}
+                                title={isLocked ? "Locked" : "Edit"}
                               >
-                                Edit
+                                <Edit2 size={14} />
                               </button>
                               <button 
-                                className="delete-entry-btn" 
+                                className="action-btn delete" 
                                 onClick={() => handleDeleteEntry(entry.id)}
                                 disabled={!canModify}
-                                title={isLocked ? "Locked (Week Approved)" : !isOwner ? "Only owners can delete" : "Delete entry"}
+                                title={isLocked ? "Locked" : "Delete"}
                               >
-                                Delete
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           </td>
@@ -452,11 +461,13 @@ export default function Timesheet() {
             </div>
           </div>
 
-          {/* Edit Modal */}
           {isEditModalOpen && (
             <div className="modal-overlay">
               <div className="edit-modal">
-                <h3>Edit Time Entry</h3>
+                <div className="modal-header">
+                  <h3>Edit Time Entry</h3>
+                  <button className="close-modal" onClick={() => setIsEditModalOpen(false)}><X size={20} /></button>
+                </div>
                 <form onSubmit={handleEditSubmit}>
                   <div className="form-group">
                     <label>Task</label>
@@ -464,7 +475,6 @@ export default function Timesheet() {
                       required
                       value={editFormData.taskId}
                       onChange={e => setEditFormData({...editFormData, taskId: e.target.value})}
-                      style={{ width: '100%', padding: '10px', borderRadius: '6px', background: 'var(--bg-main)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     >
                       <option value="">Select a task</option>
                       {allTasks.map(t => (
@@ -472,23 +482,25 @@ export default function Timesheet() {
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Start Date & Time</label>
-                    <input 
-                      type="datetime-local" 
-                      required 
-                      value={editFormData.startTime}
-                      onChange={e => setEditFormData({...editFormData, startTime: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>End Date & Time</label>
-                    <input 
-                      type="datetime-local" 
-                      required
-                      value={editFormData.endTime}
-                      onChange={e => setEditFormData({...editFormData, endTime: e.target.value})}
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Start</label>
+                      <input 
+                        type="datetime-local" 
+                        required 
+                        value={editFormData.startTime}
+                        onChange={e => setEditFormData({...editFormData, startTime: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>End</label>
+                      <input 
+                        type="datetime-local" 
+                        required
+                        value={editFormData.endTime}
+                        onChange={e => setEditFormData({...editFormData, endTime: e.target.value})}
+                      />
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Description</label>
@@ -498,17 +510,18 @@ export default function Timesheet() {
                       onChange={e => setEditFormData({...editFormData, description: e.target.value})}
                     />
                   </div>
-                  <div className="form-group billable-group">
-                    <label>
+                  <div className="form-group billable-toggle">
+                    <label className="checkbox-container">
                       <input 
                         type="checkbox" 
                         checked={editFormData.billable}
                         onChange={e => setEditFormData({...editFormData, billable: e.target.checked})}
                       />
+                      <span className="checkmark"></span>
                       Billable Task
                     </label>
                   </div>
-                  <div className="modal-actions">
+                  <div className="modal-footer">
                     <button type="button" className="cancel-btn" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
                     <button type="submit" className="save-btn" disabled={editLoading}>
                       {editLoading ? 'Saving...' : 'Save Changes'}
@@ -519,42 +532,43 @@ export default function Timesheet() {
             </div>
           )}
 
-          {/* Admin: Pending Approval Queue */}
           {user?.role === 'admin' && pendingSubmissions.length > 0 && (
             <div className="approval-queue">
-              <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>
-                Pending Approvals ({pendingSubmissions.length})
-              </h3>
-              <div className="approval-list">
+              <div className="section-header">
+                <h3><Users size={18} /> Pending Approvals ({pendingSubmissions.length})</h3>
+              </div>
+              <div className="approval-grid">
                 {pendingSubmissions.map(ts => (
-                  <div key={ts.id} className="approval-card">
-                    <div className="approval-info">
-                      <div className="approval-user">{ts.user?.name}</div>
-                      <div className="approval-week">
-                        {formatDate(new Date(ts.weekStart))} – {formatDate(new Date(ts.weekEnd))}
+                  <div key={ts.id} className="approval-card-v2">
+                    <div className="approval-user-info">
+                      <div className="user-avatar-small">
+                        {ts.user?.name?.charAt(0)}
                       </div>
-                      <div className="approval-submitted">
-                        Submitted {new Date(ts.submittedAt).toLocaleDateString()}
+                      <div className="user-text">
+                        <div className="name">{ts.user?.name}</div>
+                        <div className="date">{formatDate(new Date(ts.weekStart))} – {formatDate(new Date(ts.weekEnd))}</div>
                       </div>
                     </div>
 
-                    <div className="approval-actions">
-                      <button className="approve-btn" onClick={() => handleApprove(ts.id)}>
-                        Approve
+                    <div className="approval-actions-v2">
+                      <button className="approve-v2-btn" onClick={() => handleApprove(ts.id)}>
+                        <Check size={14} /> Approve
                       </button>
                       {rejectingId === ts.id ? (
-                        <div className="reject-form">
+                        <div className="reject-form-v2">
                           <input
                             type="text"
-                            placeholder="Rejection reason (optional)"
+                            placeholder="Reason..."
                             value={rejectNote}
                             onChange={e => setRejectNote(e.target.value)}
                           />
-                          <button className="reject-btn" onClick={() => handleReject(ts.id)}>Confirm Reject</button>
-                          <button className="cancel-btn" onClick={() => { setRejectingId(null); setRejectNote(''); }}>Cancel</button>
+                          <button className="confirm-btn" onClick={() => handleReject(ts.id)}>Reject</button>
+                          <button className="cancel-mini-btn" onClick={() => setRejectingId(null)}>Cancel</button>
                         </div>
                       ) : (
-                        <button className="reject-btn" onClick={() => setRejectingId(ts.id)}>Reject</button>
+                        <button className="reject-v2-btn" onClick={() => setRejectingId(ts.id)}>
+                          <AlertCircle size={14} /> Reject
+                        </button>
                       )}
                     </div>
                   </div>
@@ -568,3 +582,4 @@ export default function Timesheet() {
     </div>
   );
 }
+
