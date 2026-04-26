@@ -14,12 +14,15 @@ import {
   TrendingUp,
   DollarSign,
   Calendar,
-  Filter
+  Filter,
+  CheckCircle2,
+  FolderOpen
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Badge from '../components/Badge';
+import Sidebar from '../components/Sidebar';
 import './Analytics.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -188,8 +191,10 @@ export default function Analytics() {
   return (
     <div className="app-wrapper">
       <Navbar />
-      <main className="main-content">
-        <div className="analytics-container">
+      <div className="dashboard-layout-container">
+        <Sidebar projects={projects} user={user} onProjectSelect={() => {}} />
+        <main className="main-content">
+          <div className="analytics-container">
           
           <div className="analytics-header">
             <div className="analytics-title">
@@ -468,6 +473,7 @@ export default function Analytics() {
         </div>
       </main>
     </div>
-  );
+  </div>
+);
 }
 

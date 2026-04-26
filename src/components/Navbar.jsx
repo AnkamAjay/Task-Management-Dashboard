@@ -47,7 +47,7 @@ function Navbar({
     <header className="navbar">
       <div className="navbar-brand">
         <div className="brand-icon">
-          <ClipboardCheck size={24} color="var(--accent)" strokeWidth={2.5} />
+          <ClipboardCheck size={20} color="var(--accent)" strokeWidth={2} />
         </div>
         <div className="brand-text">
           <h1>Task Dashboard</h1>
@@ -114,24 +114,6 @@ function Navbar({
           </div>
         )}
 
-        <button className="admin-link-btn" onClick={() => navigate('/')}>
-          <LayoutDashboard size={14} /> Dashboard
-        </button>
-        <button className="admin-link-btn" onClick={() => navigate('/timesheet')}>
-          <Clock size={14} /> Timesheet
-        </button>
-        <button className="admin-link-btn" onClick={() => navigate('/analytics')}>
-          <BarChart3 size={14} /> Reports
-        </button>
-        <button className="admin-link-btn" onClick={() => navigate('/help')}>
-          <HelpCircle size={14} /> Help
-        </button>
-
-        {user?.role === 'admin' && (
-          <a href="/admin/" className="admin-link-btn">
-            <Settings size={14} /> Admin Panel
-          </a>
-        )}
         <button 
           className="bell-btn" 
           onClick={toggleTheme} 

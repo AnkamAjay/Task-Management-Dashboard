@@ -28,6 +28,7 @@ async function fetchLogs(page = 1) {
         const data = await res.json();
         renderLogs(data.logs);
         updatePagination(data.page, data.pages, data.total);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     } catch (err) {
         console.error(err);
         showToast('Error loading audit logs', 'error');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Circle, 
@@ -159,7 +159,11 @@ function KanbanCard({ task, onStatusChange, highlighted }) {
             ))}
           </select>
           <div className="kanban-status-icon">
-            {isEffectivelyOverdue ? <Lock size={10} /> : React.createElement(STATUS_CONFIG[localStatus]?.icon || Circle, { size: 10 })}
+            {(() => {
+              if (isEffectivelyOverdue) return <Lock size={10} />;
+              const Icon = STATUS_CONFIG[localStatus]?.icon || Circle;
+              return <Icon size={10} />;
+            })()}
           </div>
         </div>
       </div>
@@ -180,7 +184,10 @@ function KanbanBoard({ tasks, onRefresh, highlightedTaskId }) {
           <div key={status} className="kanban-column">
             <div className="kanban-column-header">
               <div className={`column-status-icon color-${STATUS_CONFIG[status].color}`}>
-                {React.createElement(STATUS_CONFIG[status].icon, { size: 14 })}
+                {(() => {
+                  const Icon = STATUS_CONFIG[status].icon;
+                  return <Icon size={14} />;
+                })()}
               </div>
               <h3>{status}</h3>
               <span className="column-count-badge">{tasksByStatus[status].length}</span>

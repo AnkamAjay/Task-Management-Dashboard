@@ -92,8 +92,8 @@ function renderProjects() {
           ${escapeHtml(p.name)}
         </h3>
         <div>
-          <button class="edit-btn" onclick="startEdit('${p.id || p._id}')">✏️ Edit</button>
-          <button class="delete-btn" onclick="deleteProj('${p.id || p._id}')">🗑️</button>
+          <button class="edit-btn" onclick="startEdit('${p.id || p._id}')"><i data-lucide="edit-2"></i> Edit</button>
+          <button class="delete-btn" onclick="deleteProj('${p.id || p._id}')"><i data-lucide="trash-2"></i></button>
         </div>
       </div>
       <div style="margin-top:10px; color:#c9d1d9; font-size:0.9rem">${escapeHtml(p.description) || '<i>No description provided.</i>'}</div>
@@ -103,6 +103,7 @@ function renderProjects() {
       <div style="margin-top:10px; font-size:0.8rem; display: inline-block; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.1);">Status: ${p.status}</div>
     </div>
   `).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderBudgetBars(p) {

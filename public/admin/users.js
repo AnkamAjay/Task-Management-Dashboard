@@ -96,21 +96,22 @@ function renderUsers() {
         
         <div class="meta-item">
           <span class="meta-label">Role</span>
-          <span class="priority-badge" style="background: var(--surface)">${user.role === 'admin' ? '🛡️ Admin' : '👤 User'}</span>
+          <span class="priority-badge" style="background: var(--surface)"><i data-lucide="${user.role === 'admin' ? 'shield' : 'user'}"></i> ${user.role === 'admin' ? 'Admin' : 'User'}</span>
         </div>
         <div class="meta-item" style="margin-top: 8px;">
           <span class="meta-label">Hourly Rate</span>
           <span class="priority-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: bold; border: 1px solid rgba(16,185,129,0.2);">
-            $ ${user.hourlyRate || 0} / hr
+            <i data-lucide="dollar-sign"></i> ${user.hourlyRate || 0} / hr
           </span>
         </div>
       </div>
       
       <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px;text-align: right;">
-        <button class="edit-btn" onclick="startEdit('${user.id || user._id}')">✏️ Edit Rate</button>
+        <button class="edit-btn" onclick="startEdit('${user.id || user._id}')"><i data-lucide="edit-3"></i> Edit Rate</button>
       </div>
     </div>
   `).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function startEdit(id) {

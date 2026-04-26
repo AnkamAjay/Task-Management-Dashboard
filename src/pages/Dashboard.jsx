@@ -6,6 +6,7 @@ import TaskTable from '../components/TaskTable';
 import KanbanBoard from '../components/KanbanBoard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TaskModal from '../components/TaskModal';
+import Sidebar from '../components/Sidebar';
 import { Tag, FolderOpen, LayoutList, Columns } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
@@ -295,7 +296,9 @@ function Dashboard() {
         priorityFilter === 'All' || task.priority === priorityFilter;
       const matchesTag =
         tagFilter === 'all' || (task.tags && task.tags.includes(tagFilter));
-      return matchesSearch && matchesPriority && matchesTag;
+      const matchesProject =
+        projectFilter === 'all' || String(task.project?._id || task.project?.id || task.projectId) === String(projectFilter);
+      return matchesSearch && matchesPriority && matchesTag && matchesProject;
     })
     .sort((a, b) => {
       const deadlineDiff = new Date(a.deadline) - new Date(b.deadline);
@@ -316,88 +319,85 @@ function Dashboard() {
         density={density}
         onDensityChange={setDensity}
       />
-      <main className="main-content">
-        {!loading && !error && user?.role === 'admin' && (
-          <AdminOnboarding projects={projects} tasks={tasks} />
-        )}
-        {!loading && !error && user?.role !== 'admin' && tasks.length === 0 && (
-          <UserWelcomeTip />
-        )}
-        {loading ? (
-          <LoadingSpinner />
-        ) : error ? (
-          <div className="error-banner">
-            <span className="error-icon">⚠️</span>
-            <p>{error}</p>
-          </div>
-        ) : (
-          <>
-            <div className="dashboard-actions-row">
-              <div className="filter-group-v2">
-                <div className="filter-select-wrapper">
-                  <Tag size={14} />
-                  <select
-                    value={tagFilter}
-                    onChange={(e) => setTagFilter(e.target.value)}
-                  >
-                    <option value="all">All Tags</option>
-                    {[...new Set(tasks.flatMap(t => t.tags || []))].sort().map(tag => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="filter-select-wrapper">
-                  <FolderOpen size={14} />
-                  <select
-                    value={projectFilter}
-                    onChange={(e) => setProjectFilter(e.target.value)}
-                  >
-                    <option value="all">All Projects</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="view-mode-group">
-                <div className="toggle-pill-v2">
-                  <button 
-                    className={viewType === 'table' ? 'active' : ''} 
-                    onClick={() => setViewType('table')}
-                  >
-                    <LayoutList size={14} /> List
-                  </button>
-                  <button 
-                    className={viewType === 'kanban' ? 'active' : ''} 
-                    onClick={() => setViewType('kanban')}
-                  >
-                    <Columns size={14} /> Kanban
-                  </button>
-                </div>
-              </div>
+      <div className="dashboard-layout-container">
+        <Sidebar 
+          projects={projects} 
+          onProjectSelect={setProjectFilter} 
+          currentProject={projectFilter} 
+          user={user}
+        />
+        <main className="main-content">
+          {!loading && !error && user?.role === 'admin' && (
+            <AdminOnboarding projects={projects} tasks={tasks} />
+          )}
+          {!loading && !error && user?.role !== 'admin' && tasks.length === 0 && (
+            <UserWelcomeTip />
+          )}
+          {loading ? (
+            <LoadingSpinner />
+          ) : error ? (
+            <div className="error-banner">
+              <span className="error-icon">⚠️</span>
+              <p>{error}</p>
             </div>
+          ) : (
+            <>
+              <div className="dashboard-actions-row">
+                <div className="filter-group-v2">
+                  <div className="filter-select-wrapper">
+                    <Tag size={14} />
+                    <select
+                      value={tagFilter}
+                      onChange={(e) => setTagFilter(e.target.value)}
+                    >
+                      <option value="all">All Tags</option>
+                      {[...new Set(tasks.flatMap(t => t.tags || []))].sort().map(tag => (
+                        <option key={tag} value={tag}>{tag}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-            {viewType === 'table' ? (
-              <TaskTable 
-                tasks={processedTasks} 
-                user={user} 
-                highlightedTaskId={highlightedTaskId} 
-                density={density} 
-                onTaskClick={setSelectedTask}
-              />
-            ) : (
-              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
-            )}
+                <div className="view-mode-group">
+                  <div className="toggle-pill-v2">
+                    <button 
+                      className={viewType === 'table' ? 'active' : ''} 
+                      onClick={() => setViewType('table')}
+                    >
+                      <LayoutList size={14} /> List
+                    </button>
+                    <button 
+                      className={viewType === 'kanban' ? 'active' : ''} 
+                      onClick={() => setViewType('kanban')}
+                    >
+                      <Columns size={14} /> Kanban
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-            {selectedTask && (
-              <TaskModal 
-                task={selectedTask} 
-                onClose={() => setSelectedTask(null)} 
-              />
-            )}
-          </>
-        )}
-      </main>
+              {viewType === 'table' ? (
+                <TaskTable 
+                  tasks={processedTasks} 
+                  user={user} 
+                  highlightedTaskId={highlightedTaskId} 
+                  density={density} 
+                  onTaskClick={setSelectedTask}
+                />
+              ) : (
+                <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
+              )}
+
+              {selectedTask && (
+                <TaskModal 
+                  task={selectedTask} 
+                  onClose={() => setSelectedTask(null)} 
+                />
+              )}
+            </>
+          )}
+        </main>
+      </div>
       {toast && <div className="toast-notification">{toast}</div>}
     </div>
   );

@@ -47,6 +47,7 @@ async function init() {
   await fetchUsers();
   await fetchProjects();
   await fetchTasks();
+  if (window.lucide) window.lucide.createIcons();
   setInterval(fetchTasks, 10000);
 }
 
@@ -342,7 +343,7 @@ function buildTaskCard(task) {
     Low: 'priority-low',
   }[task.priority] || '';
 
-  const priorityIcon = { High: '🔴', Medium: '🟠', Low: '🟢' }[task.priority];
+  const priorityIcon = { High: 'circle-alert', Medium: 'circle', Low: 'circle-check-2' }[task.priority];
   const overdue = new Date(task.deadline) < new Date();
   const overdueClass = overdue ? 'overdue' : '';
 
@@ -352,7 +353,7 @@ function buildTaskCard(task) {
   };
 
   const attachmentHTML = task.notes && isSafeUrl(task.notes.downloadUrl)
-    ? `<a href="${escapeHtml(task.notes.downloadUrl)}" target="_blank" rel="noopener noreferrer" class="attachment-chip">⬇ ${escapeHtml(task.notes.fileName)}</a>`
+    ? `<a href="${escapeHtml(task.notes.downloadUrl)}" target="_blank" rel="noopener noreferrer" class="attachment-chip"><i data-lucide="download"></i> ${escapeHtml(task.notes.fileName)}</a>`
     : `<span class="no-file">No file</span>`;
 
   return `
@@ -365,11 +366,11 @@ function buildTaskCard(task) {
           <span class="task-id-badge">#${task.id}</span>
           <h3 class="task-card-name">${escapeHtml(task.taskName)}</h3>
           ${overdue ? '<span class="overdue-tag">OVERDUE</span>' : ''}
-          ${task.blockedBy && task.blockedBy.length > 0 ? `<span class="blocked-badge" title="Blocked by: ${task.blockedBy.map(b => b.taskName).join(', ')}">🚫 Blocked</span>` : ''}
+          ${task.blockedBy && task.blockedBy.length > 0 ? `<span class="blocked-badge" title="Blocked by: ${task.blockedBy.map(b => b.taskName).join(', ')}"><i data-lucide="ban"></i> Blocked</span>` : ''}
         </div>
         <div class="task-card-actions">
-          <button class="edit-btn" data-task-id="${task.id}" title="Edit task">✏️ Edit</button>
-          <button class="delete-btn" data-task-id="${task.id}" data-task-name="${escapeHtml(task.taskName)}" title="Delete task">🗑️ Delete</button>
+          <button class="edit-btn" data-task-id="${task.id}" title="Edit task"><i data-lucide="edit-2"></i> Edit</button>
+          <button class="delete-btn" data-task-id="${task.id}" data-task-name="${escapeHtml(task.taskName)}" title="Delete task"><i data-lucide="trash-2"></i> Delete</button>
         </div>
       </div>
       <div class="task-card-meta">
@@ -379,9 +380,9 @@ function buildTaskCard(task) {
         </div>
         <div class="meta-item">
           <span class="meta-label">Priority</span>
-          <span class="priority-badge ${priorityClass}">${priorityIcon} ${task.priority}</span>
-          ${task.isBillable ? '<span class="priority-badge" style="background:#10b981; color:#fff">💰 Billable</span>' : ''}
-          <button class="admin-activity-btn" data-task-id="${task.id}">💬 Activity</button>
+          <span class="priority-badge ${priorityClass}"><i data-lucide="${priorityIcon}"></i> ${task.priority}</span>
+          ${task.isBillable ? '<span class="priority-badge" style="background:#10b981; color:#fff"><i data-lucide="dollar-sign"></i> Billable</span>' : ''}
+          <button class="admin-activity-btn" data-task-id="${task.id}"><i data-lucide="message-square"></i> Activity</button>
         </div>
         <div class="meta-item">
           <span class="meta-label">Start</span>

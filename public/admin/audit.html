@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="theme-sync.js"></script>
   <style>
     .audit-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
@@ -30,7 +31,7 @@
   <!-- HEADER -->
   <header class="header">
     <div class="header-brand">
-      <span class="brand-icon">📜</span>
+      <i data-lucide="file-text" class="brand-lucide-icon"></i>
       <div>
         <h1>Admin Audit Logs</h1>
         <span class="brand-badge" style="background: var(--warning)">Compliance View</span>
@@ -38,16 +39,16 @@
     </div>
     <div class="header-actions">
       <a href="/admin/index.html" class="view-dashboard-btn" style="background: #30363d; color: #fff; border:none; margin-right: 10px;">
-        ⚙️ Tasks
+        <i data-lucide="settings" style="width:14px;height:14px;"></i> Tasks
       </a>
       <a href="/admin/projects.html" class="view-dashboard-btn" style="background: #1f6feb; color: #fff; border:none; margin-right: 10px;">
-        📁 Projects
+        <i data-lucide="folder" style="width:14px;height:14px;"></i> Projects
       </a>
       <a href="/admin/users.html" class="view-dashboard-btn" style="background: #8250df; color: #fff; border:none; margin-right: 10px;">
-        👥 Users
+        <i data-lucide="users" style="width:14px;height:14px;"></i> Users
       </a>
       <a href="/" target="_blank" class="view-dashboard-btn">
-        📋 View Dashboard
+        <i data-lucide="external-link" style="width:14px;height:14px;"></i> View Dashboard
       </a>
     </div>
   </header>
@@ -117,5 +118,6 @@
   </div>
 
   <script src="audit.js"></script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

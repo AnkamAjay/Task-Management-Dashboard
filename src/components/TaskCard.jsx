@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Play, 
@@ -303,23 +303,26 @@ function TaskCard({ task, highlighted, density, onClick }) {
       </div>
 
       <div className="col-assigned">
-        <div className="user-avatar-circle" title={task.assignedTo?.name}>
-          {task.assignedTo?.name?.charAt(0) ?? '?'}
+        <div className="assigned-pill">
+          <div className="user-avatar-circle" title={task.assignedTo?.name}>
+            {task.assignedTo?.name?.charAt(0) ?? '?'}
+          </div>
+          <span className="user-name-label">{task.assignedTo?.name?.split(' ')[0] ?? 'Unassigned'}</span>
         </div>
-        <span className="user-name-label">{task.assignedTo?.name?.split(' ')[0] ?? 'Unassigned'}</span>
       </div>
 
       <div className="col-deadline">
         <div className={`deadline-group ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''}`}>
-          <Calendar size={12} />
+          <Calendar size={13} />
           <span>{new Date(task.deadline).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
         </div>
       </div>
 
       <div className="col-priority">
-        <Badge color={priority.color} tone="soft" icon={priority.icon} size="sm">
-          {priority.label}
-        </Badge>
+        <div className={`priority-mini-badge color-${priority.color}`}>
+          {(() => { const Icon = priority.icon; return <Icon size={13} />; })()}
+          <span>{priority.label}</span>
+        </div>
       </div>
 
       <div className="col-status">
@@ -337,7 +340,10 @@ function TaskCard({ task, highlighted, density, onClick }) {
             ))}
           </select>
           <div className="status-v2-indicator">
-            {React.createElement(STATUS_CONFIG[localStatus]?.icon || Circle, { size: 10 })}
+            {(() => {
+              const StatusIcon = STATUS_CONFIG[localStatus]?.icon || Circle;
+              return <StatusIcon size={10} />;
+            })()}
           </div>
         </div>
       </div>

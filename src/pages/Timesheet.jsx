@@ -11,12 +11,15 @@ import {
   Send,
   Users,
   Check,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Badge from '../components/Badge';
+import Sidebar from '../components/Sidebar';
 import './Timesheet.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -71,6 +74,7 @@ export default function Timesheet() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [rejectNote, setRejectNote] = useState('');
   const [rejectingId, setRejectingId] = useState(null);
+  const [projects, setProjects] = useState([]);
 
   const [editingEntry, setEditingEntry] = useState(null);
   const [editFormData, setEditFormData] = useState({
@@ -94,6 +98,9 @@ export default function Timesheet() {
         .then(res => setUsers(res.data))
         .catch(err => console.error(err));
     }
+    axios.get(`${API_BASE}/api/projects`, { headers: authHeader })
+      .then(res => setProjects(res.data))
+      .catch(err => console.error(err));
   }, [user, token]);
 
   const fetchTimesheet = useCallback(async () => {
@@ -284,8 +291,10 @@ export default function Timesheet() {
   return (
     <div className="app-wrapper">
       <Navbar />
-      <main className="main-content">
-        <div className="timesheet-container">
+      <div className="dashboard-layout-container">
+        <Sidebar projects={projects} user={user} onProjectSelect={() => {}} />
+        <main className="main-content">
+          <div className="timesheet-container">
 
           <div className="timesheet-header">
             <div className="week-nav">
@@ -580,6 +589,7 @@ export default function Timesheet() {
         </div>
       </main>
     </div>
-  );
+  </div>
+);
 }
 

@@ -1,16 +1,32 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 import './Help.css';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export default function Help() {
-  const { user } = useAuth();
+  const { token, user } = useAuth();
+  const [projects, setProjects] = useState([]);
   const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    if (token) {
+      axios.get(`${API_BASE}/api/projects`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => setProjects(res.data))
+        .catch(err => console.error(err));
+    }
+  }, [token]);
 
   return (
     <div className="app-wrapper">
       <Navbar />
-      <main className="main-content" style={{ paddingTop: '20px' }}>
-        <div className="help-container">
+      <div className="dashboard-layout-container">
+        <Sidebar user={user} projects={projects} onProjectSelect={() => {}} />
+        <main className="main-content" style={{ paddingTop: '20px' }}>
+          <div className="help-container">
 
           <div className="help-header">
             <h2>Help & Getting Started</h2>
@@ -139,5 +155,6 @@ export default function Help() {
         </div>
       </main>
     </div>
-  );
+  </div>
+);
 }

@@ -1,23 +1,21 @@
 .task-table-container {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  margin: 10px 20px 40px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  margin: 0;
 }
 
 .table-header {
   display: grid;
-  grid-template-columns: 80px 2.5fr 1.2fr 1.2fr 1.2fr 1.2fr 1.4fr;
+  grid-template-columns: 80px 2.5fr 1.2fr 1.1fr 1fr 1.1fr 1.4fr;
   align-items: center;
-  padding: 12px 20px;
-  background: var(--bg-secondary);
+  padding: 10px 20px;
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
 }
 
 .table-header > div {
