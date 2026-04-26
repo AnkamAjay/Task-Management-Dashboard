@@ -1,5 +1,6 @@
 import Notification from '../models/Notification.js';
 import { checkDeadlinesForUser } from '../utils/deadlineChecker.js';
+import { emitEvent } from '../utils/socket.js';
 
 export const getMyNotifications = async (req, res, next) => {
   try {
@@ -29,12 +30,28 @@ export const markAsRead = async (req, res, next) => {
   }
 };
 
+export const markAllAsRead = async (req, res, next) => {
+  try {
+    const result = await Notification.updateMany(
+      { userId: req.user.id, read: false },
+      { $set: { read: true } }
+    );
+    res.json({ message: 'All notifications marked as read', count: result.modifiedCount });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Utility function for internal use (doesn't need req/res)
 export const createInternalNotification = async (userId, message, type, taskId = null) => {
   try {
     const data = { userId, message, type };
     if (taskId) data.taskId = taskId;
-    await Notification.create(data);
+    const notification = await Notification.create(data);
+    const populated = taskId
+      ? await notification.populate('taskId', 'taskName deadline')
+      : notification;
+    emitEvent('notification:new', populated, `user:${userId}`);
   } catch (error) {
     console.error('Error creating internal notification:', error);
   }

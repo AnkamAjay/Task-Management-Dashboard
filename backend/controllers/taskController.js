@@ -4,6 +4,8 @@ import Comment from '../models/Comment.js';
 import { logActivity } from './commentController.js';
 import { createInternalNotification } from './notificationController.js';
 import Notification from '../models/Notification.js';
+import { logAudit } from '../utils/auditLogger.js';
+import { emitEvent } from '../utils/socket.js';
 
 // @desc    Get all tasks
 // @route   GET /api/tasks
@@ -110,6 +112,14 @@ export const createTask = async (req, res, next) => {
         task.id
       );
     }
+
+    await logAudit(req.user.id, 'CREATE_TASK', 'Task', task._id, { taskName: task.taskName });
+
+    emitEvent('task:created', task, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      'admins'
+    ]);
+
     res.status(201).json(task);
   } catch (error) {
     next(error);
@@ -142,6 +152,18 @@ export const updateTask = async (req, res, next) => {
       );
     }
 
+    await logAudit(req.user.id, 'UPDATE_TASK', 'Task', task._id, {
+      taskName: task.taskName,
+      changes: req.body
+    });
+
+    // Reach the new assignee, the old one (if reassigned), and any admin watcher.
+    emitEvent('task:updated', task, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      originalTask.assignedTo ? `user:${originalTask.assignedTo}` : null,
+      'admins'
+    ]);
+
     res.json(task);
   } catch (error) {
     next(error);
@@ -164,6 +186,13 @@ export const deleteTask = async (req, res, next) => {
       Comment.deleteMany({ task: req.params.id }),
       TimeEntry.deleteMany({ task: req.params.id }),
       Notification.deleteMany({ taskId: req.params.id })
+    ]);
+
+    await logAudit(req.user.id, 'DELETE_TASK', 'Task', req.params.id, { taskName: task.taskName });
+
+    emitEvent('task:deleted', { _id: req.params.id }, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      'admins'
     ]);
 
     res.json({ message: 'Task deleted successfully' });
@@ -214,7 +243,18 @@ export const updateTaskStatus = async (req, res, next) => {
       status
     );
 
+    if (req.user.role === 'admin') {
+      await logAudit(req.user.id, 'UPDATE_TASK_STATUS', 'Task', task._id, {
+        taskName: task.taskName,
+        oldStatus,
+        newStatus: status
+      });
+    }
 
+    emitEvent('task:updated', task, [
+      task.assignedTo ? `user:${task.assignedTo}` : null,
+      'admins'
+    ]);
 
     res.json(task);
   } catch (error) {
@@ -256,6 +296,16 @@ export const bulkUpdateTasks = async (req, res, next) => {
       return res.status(400).json({ message: 'No task IDs provided' });
     }
 
+    // Snapshot affected assignees before mutation so we can target the emit.
+    const affectedTasks = await Task.find({ _id: { $in: taskIds } }, 'assignedTo');
+    const affectedRooms = new Set(['admins']);
+    affectedTasks.forEach(t => {
+      if (t.assignedTo) affectedRooms.add(`user:${t.assignedTo}`);
+    });
+    if (action === 'reassign' && payload.assignedTo) {
+      affectedRooms.add(`user:${payload.assignedTo}`);
+    }
+
     if (action === 'reassign') {
       await Task.updateMany({ _id: { $in: taskIds } }, { assignedTo: payload.assignedTo });
       
@@ -290,6 +340,13 @@ export const bulkUpdateTasks = async (req, res, next) => {
     else {
       return res.status(400).json({ message: 'Invalid bulk action' });
     }
+
+    await logAudit(req.user.id, `BULK_${action.toUpperCase()}_TASKS`, 'Task', null, { 
+      count: taskIds.length,
+      payload 
+    });
+
+    emitEvent('tasks:bulk_updated', { taskIds, action, payload }, [...affectedRooms]);
 
     res.json({ message: 'Bulk operation completed successfully' });
   } catch (error) {

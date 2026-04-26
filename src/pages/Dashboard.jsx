@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
+import socket, { connectSocket, disconnectSocket, joinUserRoom, joinAdminRoom } from '../utils/socket';
 import Navbar from '../components/Navbar';
 import TaskTable from '../components/TaskTable';
 import KanbanBoard from '../components/KanbanBoard';
@@ -75,7 +76,7 @@ function AdminOnboarding({ projects, tasks }) {
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TASKS_API = `${API_BASE}/api/tasks`;
-const POLL_INTERVAL = 10000; // 10 seconds
+const FALLBACK_POLL_INTERVAL = 60000; // 60 seconds backup
 
 const PRIORITY_ORDER = { High: 1, Medium: 2, Low: 3 };
 
@@ -127,7 +128,14 @@ function Dashboard() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
   const [viewType, setViewType] = useState(() => localStorage.getItem('dashboard_view') || 'table');
+  const [highlightedTaskId, setHighlightedTaskId] = useState(null);
+  const [toast, setToast] = useState(null);
   const { token, user, logout } = useAuth();
+
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -167,19 +175,107 @@ function Dashboard() {
   }, [token, projectFilter, logout]);
 
   useEffect(() => {
+    if (!token) return;
+
     fetchProjects();
     fetchTasks(true);
-    const interval = setInterval(() => {
-      fetchProjects();
+
+    // WebSocket Setup
+    connectSocket(token);
+    if (user?.id) joinUserRoom(user.id);
+    if (user?.role === 'admin') joinAdminRoom();
+
+    socket.on('task:created', () => {
+      console.log('Socket: task:created received');
       fetchTasks(false);
-    }, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [fetchTasks, fetchProjects]);
+    });
+    socket.on('task:updated', () => {
+      console.log('Socket: task:updated received');
+      fetchTasks(false);
+    });
+    socket.on('task:deleted', () => {
+      console.log('Socket: task:deleted received');
+      fetchTasks(false);
+    });
+    socket.on('tasks:bulk_updated', () => {
+      console.log('Socket: tasks:bulk_updated received');
+      fetchTasks(false);
+    });
+
+    // Fallback polling (much slower)
+    const interval = setInterval(() => {
+      if (!socket.connected) {
+        console.log('WS disconnected, using fallback poll...');
+        fetchProjects();
+        fetchTasks(false);
+      }
+    }, FALLBACK_POLL_INTERVAL);
+
+    return () => {
+      socket.off('task:created');
+      socket.off('task:updated');
+      socket.off('task:deleted');
+      socket.off('tasks:bulk_updated');
+      clearInterval(interval);
+    };
+  }, [fetchTasks, fetchProjects, token, user?.id, user?.role]);
 
   useEffect(() => {
     localStorage.setItem('dashboard_view', viewType);
   }, [viewType]);
 
+  const handleNavigateToTask = useCallback((taskId) => {
+    if (!taskId) return;
+    
+    // 1. Check if task exists in our loaded set
+    const task = tasks.find(t => String(t.id || t._id) === String(taskId));
+    
+    if (!task) {
+      showToast("⚠️ Task not found or deleted");
+      return;
+    }
+
+    // 2. Scroll to the task element
+    setTimeout(() => {
+      let element = document.getElementById(`task-${taskId}`);
+      
+      if (!element) {
+        // Task exists but is filtered out. Clear filters!
+        setSearchTerm('');
+        setPriorityFilter('All');
+        setTagFilter('all');
+        setProjectFilter('all');
+        
+        // Try scrolling again after filters are cleared and React re-renders
+        setTimeout(() => {
+          element = document.getElementById(`task-${taskId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedTaskId(taskId);
+            setTimeout(() => setHighlightedTaskId(null), 3000);
+          } else {
+            showToast("⚠️ Task hidden by current view filters");
+          }
+        }, 200);
+      } else {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 3. Apply highlight via state
+        setHighlightedTaskId(taskId);
+        setTimeout(() => setHighlightedTaskId(null), 3000);
+      }
+    }, 100);
+  }, [tasks]);
+
+  // Handle taskId from URL query param (e.g. after redirect from another page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const taskId = params.get('taskId');
+    if (taskId && !loading && tasks.length > 0) {
+      handleNavigateToTask(taskId);
+      // Clean up the URL without refreshing the page
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [loading, tasks.length, handleNavigateToTask]);
   const processedTasks = tasks
     .filter((task) => {
       const term = searchTerm.toLowerCase();
@@ -208,6 +304,7 @@ function Dashboard() {
         onPriorityChange={setPriorityFilter}
         lastUpdated={lastUpdated}
         taskCount={processedTasks.length}
+        onNavigateToTask={handleNavigateToTask}
       />
       <main className="main-content">
         {!loading && !error && user?.role === 'admin' && (
@@ -253,7 +350,7 @@ function Dashboard() {
                     fontSize: '0.8rem', 
                     borderRadius: '6px', 
                     background: viewType === 'table' ? 'var(--accent)' : 'transparent',
-                    color: viewType === 'table' ? 'white' : 'var(--text-muted)',
+                    color: viewType === 'table' ? 'var(--on-accent)' : 'var(--text-muted)',
                     border: 'none',
                     cursor: 'pointer'
                   }}
@@ -267,7 +364,7 @@ function Dashboard() {
                     fontSize: '0.8rem', 
                     borderRadius: '6px', 
                     background: viewType === 'kanban' ? 'var(--accent)' : 'transparent',
-                    color: viewType === 'kanban' ? 'white' : 'var(--text-muted)',
+                    color: viewType === 'kanban' ? 'var(--on-accent)' : 'var(--text-muted)',
                     border: 'none',
                     cursor: 'pointer'
                   }}
@@ -277,13 +374,14 @@ function Dashboard() {
               </div>
             </div>
             {viewType === 'table' ? (
-              <TaskTable tasks={processedTasks} user={user} />
+              <TaskTable tasks={processedTasks} user={user} highlightedTaskId={highlightedTaskId} />
             ) : (
-              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} />
+              <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
             )}
           </>
         )}
       </main>
+      {toast && <div className="toast-notification">{toast}</div>}
     </div>
   );
 }

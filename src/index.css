@@ -35,6 +35,37 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --transition: all 0.2s ease;
+  --nav-bg: rgba(22, 27, 34, 0.85);
+  --on-accent: #ffffff;
+}
+
+:root[data-theme="light"] {
+  --bg-primary: #f6f8fa;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f0f2f5;
+  --border: #d0d7de;
+  --border-light: #d8dee4;
+  --text-primary: #1F2328;
+  --text-secondary: #57606a;
+  --text-muted: #6e7781;
+  --accent: #0969da;
+  --accent-glow: rgba(9, 105, 218, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 3px 6px rgba(140,149,159,0.15);
+  --shadow-lg: 0 8px 24px rgba(140,149,159,0.2);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  /* Priority/status — punchier hex + slightly more opaque badge fills so chips stay legible on white. */
+  --high-color: #cf222e;
+  --high-bg: rgba(207, 34, 46, 0.12);
+  --high-border: rgba(207, 34, 46, 0.35);
+  --medium-color: #9a6700;
+  --medium-bg: rgba(154, 103, 0, 0.12);
+  --medium-border: rgba(154, 103, 0, 0.35);
+  --low-color: #1a7f37;
+  --low-bg: rgba(26, 127, 55, 0.12);
+  --low-border: rgba(26, 127, 55, 0.35);
+  --overdue-bg: rgba(207, 34, 46, 0.06);
 }
 
 html {
@@ -54,4 +85,36 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+@keyframes highlight-glow {
+  0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.6); }
+  50% { box-shadow: 0 0 20px 4px rgba(88, 166, 255, 0.4); border-color: var(--accent); }
+  100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); }
+}
+
+.highlight-glow {
+  animation: highlight-glow 2.5s ease-out;
+  border-color: var(--accent) !important;
+  background: var(--bg-hover) !important;
+}
+
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #333;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 10000;
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

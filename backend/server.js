@@ -1,4 +1,6 @@
 import express from 'express';
+import { createServer } from 'http';
+import { initSocket } from './utils/socket.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
@@ -13,6 +15,7 @@ import reportRoutes from './routes/reports.js';
 import timesheetRoutes from './routes/timesheets.js';
 import commentRoutes from './routes/comments.js';
 import notificationRoutes from './routes/notifications.js';
+import auditRoutes from './routes/audit.js';
 import { checkAllDeadlines } from './utils/deadlineChecker.js';
 import { processRecurringTasks } from './utils/recurringChecker.js';
 
@@ -35,9 +38,10 @@ for (const key of REQUIRED_ENV) {
 connectDB();
 
 const app = express();
+const httpServer = createServer(app);
 
 // Middleware
-app.use(express.json({ limit: '10mb' })); // Parses incoming JSON requests; limit prevents oversized payload attacks
+app.use(express.json({ limit: '10mb' }));
 
 // Hardened CORS for production and specific local dev ports
 const allowedOrigins = [
@@ -48,6 +52,9 @@ const allowedOrigins = [
   'http://localhost:5176',
   'http://localhost:5177'
 ].filter(Boolean);
+
+// Initialize Socket.io
+initSocket(httpServer, allowedOrigins);
 
 app.use(cors({
   origin: allowedOrigins
@@ -68,6 +75,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/timesheets', timesheetRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/audit', auditRoutes);
 
 // Serve React production build handled by app.yaml handlers
 // No additional static serving code needed here.
@@ -94,6 +102,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
+  <script src="theme-sync.js"></script>
 </head>
 <body>
 
@@ -27,11 +28,14 @@
       </span>
       <span class="admin-user-label" id="adminUserName"></span>
       <button class="logout-btn-admin" onclick="logout()">Logout</button>
-      <a href="/admin/projects.html" class="view-dashboard-btn" style="background:var(--accent); color: #fff; border:none; margin-right: 10px;">
-        📁 Manage Projects
+      <a href="/admin/projects.html" class="view-dashboard-btn" style="background: #1f6feb; color: #fff; border:none; margin-right: 10px;">
+        📁 Projects
       </a>
-      <a href="/admin/users.html" class="view-dashboard-btn" style="background:var(--accent); color: #fff; border:none; margin-right: 10px;">
-        👥 Manage Users
+      <a href="/admin/users.html" class="view-dashboard-btn" style="background: #8250df; color: #fff; border:none; margin-right: 10px;">
+        👥 Users
+      </a>
+      <a href="/admin/audit.html" class="view-dashboard-btn" style="background: #d29922; color: #fff; border:none; margin-right: 10px;">
+        📜 Audit Logs
       </a>
       <a href="/" target="_blank" class="view-dashboard-btn">
         📋 View Dashboard

@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
+  <script src="theme-sync.js"></script>
   <style>
     .color-preview { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: middle; margin-right: 8px; border: 1px solid rgba(255,255,255,0.2); }
   </style>
@@ -22,8 +23,14 @@
       </div>
     </div>
     <div class="header-actions">
-      <a href="/admin/" class="view-dashboard-btn" style="margin-right: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-primary);">
-        ⚙️ Manage Tasks
+      <a href="/admin/index.html" class="view-dashboard-btn" style="background: #30363d; color: #fff; border:none; margin-right: 10px;">
+        ⚙️ Tasks
+      </a>
+      <a href="/admin/users.html" class="view-dashboard-btn" style="background: #8250df; color: #fff; border:none; margin-right: 10px;">
+        👥 Users
+      </a>
+      <a href="/admin/audit.html" class="view-dashboard-btn" style="background: #d29922; color: #fff; border:none; margin-right: 10px;">
+        📜 Audit Logs
       </a>
       <a href="/" target="_blank" class="view-dashboard-btn">
         📋 View Dashboard
@@ -63,6 +70,17 @@
         <div class="form-group">
           <label for="description">Detailed Description</label>
           <textarea id="description" placeholder="Project details, objectives, or scopes..." rows="4"></textarea>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label for="budgetHours">Budget (Hours)</label>
+            <input type="number" id="budgetHours" placeholder="0" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label for="budgetAmount">Budget (Amount $)</label>
+            <input type="number" id="budgetAmount" placeholder="0" min="0" />
+          </div>
         </div>
 
         <button type="submit" class="submit-btn" id="submitBtn">

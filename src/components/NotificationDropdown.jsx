@@ -29,7 +29,9 @@ function LiveTimer({ deadline }) {
   );
 }
 
-function NotificationDropdown({ notifications, onMarkAsRead, onClose }) {
+function NotificationDropdown({ notifications, onMarkAsRead, onMarkAllAsRead, onNotificationClick, onClose }) {
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   const getIcon = (type) => {
     switch (type) {
       case 'task_assigned': return '📌';
@@ -41,11 +43,34 @@ function NotificationDropdown({ notifications, onMarkAsRead, onClose }) {
     }
   };
 
+  const handleItemClick = (notification) => {
+    if (notification.taskId) {
+      const taskId = typeof notification.taskId === 'object' ? (notification.taskId.id || notification.taskId._id) : notification.taskId;
+      if (taskId) onNotificationClick(taskId);
+    }
+    if (!notification.read) {
+      onMarkAsRead(notification.id);
+    }
+  };
+
   return (
     <div className="notification-dropdown">
       <div className="dropdown-header">
         <h3>Notifications</h3>
-        <button className="close-dropdown" onClick={onClose}>✕</button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {unreadCount > 0 && (
+            <button 
+              className="mark-all-read-btn" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkAllAsRead();
+              }}
+            >
+              ✓ Mark All Read
+            </button>
+          )}
+          <button className="close-dropdown" onClick={onClose}>✕</button>
+        </div>
       </div>
       <div className="notification-list">
         {notifications.length === 0 ? (
@@ -55,7 +80,7 @@ function NotificationDropdown({ notifications, onMarkAsRead, onClose }) {
             <div 
               key={notification.id} 
               className={`notification-item ${notification.read ? 'read' : 'unread'}`} 
-              onClick={() => !notification.read && onMarkAsRead(notification.id)}
+              onClick={() => handleItemClick(notification)}
             >
               <div className="notification-icon">{getIcon(notification.type)}</div>
               <div className="notification-content">

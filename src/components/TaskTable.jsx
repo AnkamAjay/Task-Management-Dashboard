@@ -1,7 +1,7 @@
 import TaskCard from './TaskCard';
 import './TaskTable.css';
 
-function TaskTable({ tasks, user }) {
+function TaskTable({ tasks, user, highlightedTaskId }) {
   if (tasks.length === 0) {
     if (user?.role === 'admin') {
       return (
@@ -38,7 +38,11 @@ function TaskTable({ tasks, user }) {
       </div>
       <div className="table-body">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard 
+            key={task.id} 
+            task={task} 
+            highlighted={String(task.id) === String(highlightedTaskId)} 
+          />
         ))}
       </div>
     </div>
