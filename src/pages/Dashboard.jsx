@@ -7,6 +7,7 @@ import KanbanBoard from '../components/KanbanBoard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import TaskModal from '../components/TaskModal';
 import Sidebar from '../components/Sidebar';
+import Pagination from '../components/Pagination';
 import { Tag, FolderOpen, LayoutList, Columns, SearchX, MoreHorizontal, Plus, RefreshCw, Download } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
@@ -135,6 +136,8 @@ function Dashboard() {
   const [highlightedTaskId, setHighlightedTaskId] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [toast, setToast] = useState(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
   const { token, user, logout } = useAuth();
 
   const showToast = (message) => {
@@ -285,6 +288,11 @@ function Dashboard() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [loading, tasks.length, handleNavigateToTask]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, priorityFilter, tagFilter, projectFilter, viewType]);
+
   const processedTasks = tasks
     .filter((task) => {
       const term = searchTerm.toLowerCase();
@@ -305,6 +313,10 @@ function Dashboard() {
       if (deadlineDiff !== 0) return deadlineDiff;
       return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
     });
+
+  const pagedTasks = viewType === 'table'
+    ? processedTasks.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    : processedTasks;
 
   return (
     <div className="app-wrapper">
@@ -409,13 +421,22 @@ function Dashboard() {
 
             {processedTasks.length > 0 ? (
               viewType === 'table' ? (
-                <TaskTable 
-                  tasks={processedTasks} 
-                  user={user} 
-                  highlightedTaskId={highlightedTaskId} 
-                  density={density} 
-                  onTaskClick={setSelectedTask}
-                />
+                <>
+                  <TaskTable
+                    tasks={pagedTasks}
+                    user={user}
+                    highlightedTaskId={highlightedTaskId}
+                    density={density}
+                    onTaskClick={setSelectedTask}
+                    onRefresh={() => fetchTasks(false)}
+                  />
+                  <Pagination
+                    page={page}
+                    pageSize={PAGE_SIZE}
+                    totalItems={processedTasks.length}
+                    onPageChange={setPage}
+                  />
+                </>
               ) : (
                 <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
               )

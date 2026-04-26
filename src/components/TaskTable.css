@@ -8,7 +8,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 60px 1fr 100px 80px 80px 100px 40px;
+  grid-template-columns: 36px 60px 1fr 100px 100px 80px 100px 40px;
   align-items: center;
   padding: 10px 20px;
   background: var(--bg-primary);
@@ -16,6 +16,92 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
+}
+
+.table-header .col-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bulk Action Bar (Sprint D) */
+.bulk-action-bar-v2 {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 10px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  z-index: 500;
+  animation: slideUpFade 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.bulk-info-v2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding-right: 12px;
+  border-right: 1px solid var(--border);
+}
+
+.bulk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.bulk-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bulk-btn-danger {
+  background: var(--high-bg);
+  color: var(--high-color);
+  border-color: var(--high-border);
+}
+
+.bulk-btn-danger:hover:not(:disabled) {
+  background: var(--high-color);
+  color: var(--on-accent);
+  border-color: var(--high-color);
+}
+
+.bulk-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+  padding: 6px 8px;
+}
+
+.bulk-btn-ghost:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .table-header > div {

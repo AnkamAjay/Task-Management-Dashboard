@@ -81,7 +81,7 @@ function getTimeRemaining(deadlineStr) {
   return { total, days, hours, minutes };
 }
 
-function TaskCard({ task, highlighted, density, onClick }) {
+function TaskCard({ task, highlighted, density, onClick, selected, onToggleSelect }) {
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.Low;
   const overdue = isOverdue(task.deadline);
   
@@ -215,10 +215,22 @@ function TaskCard({ task, highlighted, density, onClick }) {
   };
 
   return (
-    <div 
+    <div
       id={`task-${task.id}`}
-      className={`task-row density-${density} priority-border-${task.priority.toLowerCase()} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
+      className={`task-row density-${density} priority-border-${task.priority.toLowerCase()} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''} ${selected ? 'selected' : ''}`}
     >
+      <div className="col-select">
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            className="row-checkbox"
+            checked={!!selected}
+            onChange={onToggleSelect}
+            onClick={e => e.stopPropagation()}
+            aria-label={`Select task ${task.id}`}
+          />
+        )}
+      </div>
       <div className="col-id">
         <span className="task-id">#{String(task.id).slice(-4)}</span>
       </div>
