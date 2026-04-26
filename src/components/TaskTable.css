@@ -87,3 +87,9 @@
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
+/* Compact Mode Header */
+.task-table-container.density-compact .table-header {
+  padding: 8px 20px;
+  font-size: 0.65rem;
+}

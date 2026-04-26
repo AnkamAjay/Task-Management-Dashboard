@@ -5,6 +5,8 @@ import Navbar from '../components/Navbar';
 import TaskTable from '../components/TaskTable';
 import KanbanBoard from '../components/KanbanBoard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import TaskModal from '../components/TaskModal';
+import { Tag, FolderOpen, LayoutList, Columns } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
 
@@ -128,7 +130,9 @@ function Dashboard() {
   const [projectFilter, setProjectFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
   const [viewType, setViewType] = useState(() => localStorage.getItem('dashboard_view') || 'table');
+  const [density, setDensity] = useState(() => localStorage.getItem('dashboard_density') || 'comfortable');
   const [highlightedTaskId, setHighlightedTaskId] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [toast, setToast] = useState(null);
   const { token, user, logout } = useAuth();
 
@@ -224,6 +228,10 @@ function Dashboard() {
     localStorage.setItem('dashboard_view', viewType);
   }, [viewType]);
 
+  useEffect(() => {
+    localStorage.setItem('dashboard_density', density);
+  }, [density]);
+
   const handleNavigateToTask = useCallback((taskId) => {
     if (!taskId) return;
     
@@ -305,6 +313,8 @@ function Dashboard() {
         lastUpdated={lastUpdated}
         taskCount={processedTasks.length}
         onNavigateToTask={handleNavigateToTask}
+        density={density}
+        onDensityChange={setDensity}
       />
       <main className="main-content">
         {!loading && !error && user?.role === 'admin' && (
@@ -322,61 +332,68 @@ function Dashboard() {
           </div>
         ) : (
           <>
-            <div className="project-filter-container" style={{ padding: '0 20px 10px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <select
-                value={tagFilter}
-                onChange={(e) => setTagFilter(e.target.value)}
-                style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-              >
-                <option value="all">All Tags</option>
-                {[...new Set(tasks.flatMap(t => t.tags || []))].sort().map(tag => (
-                  <option key={tag} value={tag}>{tag}</option>
-                ))}
-              </select>
-              <select
-                value={projectFilter}
-                onChange={(e) => setProjectFilter(e.target.value)}
-                style={{ padding: '6px 12px', borderRadius: '6px', background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-              >
-                <option value="all">All Projects</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+            <div className="dashboard-actions-row">
+              <div className="filter-group-v2">
+                <div className="filter-select-wrapper">
+                  <Tag size={14} />
+                  <select
+                    value={tagFilter}
+                    onChange={(e) => setTagFilter(e.target.value)}
+                  >
+                    <option value="all">All Tags</option>
+                    {[...new Set(tasks.flatMap(t => t.tags || []))].sort().map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="filter-select-wrapper">
+                  <FolderOpen size={14} />
+                  <select
+                    value={projectFilter}
+                    onChange={(e) => setProjectFilter(e.target.value)}
+                  >
+                    <option value="all">All Projects</option>
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </div>
 
-              <div className="view-toggle" style={{ display: 'flex', background: 'var(--bg-card)', padding: '2px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <button 
-                  onClick={() => setViewType('table')}
-                  style={{ 
-                    padding: '4px 12px', 
-                    fontSize: '0.8rem', 
-                    borderRadius: '6px', 
-                    background: viewType === 'table' ? 'var(--accent)' : 'transparent',
-                    color: viewType === 'table' ? 'var(--on-accent)' : 'var(--text-muted)',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  📋 List
-                </button>
-                <button 
-                  onClick={() => setViewType('kanban')}
-                  style={{ 
-                    padding: '4px 12px', 
-                    fontSize: '0.8rem', 
-                    borderRadius: '6px', 
-                    background: viewType === 'kanban' ? 'var(--accent)' : 'transparent',
-                    color: viewType === 'kanban' ? 'var(--on-accent)' : 'var(--text-muted)',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  🧱 Kanban
-                </button>
+              <div className="view-mode-group">
+                <div className="toggle-pill-v2">
+                  <button 
+                    className={viewType === 'table' ? 'active' : ''} 
+                    onClick={() => setViewType('table')}
+                  >
+                    <LayoutList size={14} /> List
+                  </button>
+                  <button 
+                    className={viewType === 'kanban' ? 'active' : ''} 
+                    onClick={() => setViewType('kanban')}
+                  >
+                    <Columns size={14} /> Kanban
+                  </button>
+                </div>
               </div>
             </div>
+
             {viewType === 'table' ? (
-              <TaskTable tasks={processedTasks} user={user} highlightedTaskId={highlightedTaskId} />
+              <TaskTable 
+                tasks={processedTasks} 
+                user={user} 
+                highlightedTaskId={highlightedTaskId} 
+                density={density} 
+                onTaskClick={setSelectedTask}
+              />
             ) : (
               <KanbanBoard tasks={processedTasks} onRefresh={() => fetchTasks(false)} highlightedTaskId={highlightedTaskId} />
+            )}
+
+            {selectedTask && (
+              <TaskModal 
+                task={selectedTask} 
+                onClose={() => setSelectedTask(null)} 
+              />
             )}
           </>
         )}

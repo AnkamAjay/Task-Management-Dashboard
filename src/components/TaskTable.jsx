@@ -7,7 +7,7 @@ import {
 import TaskCard from './TaskCard';
 import './TaskTable.css';
 
-function TaskTable({ tasks, user, highlightedTaskId }) {
+function TaskTable({ tasks, user, highlightedTaskId, density, onTaskClick }) {
   if (tasks.length === 0) {
     if (user?.role === 'admin') {
       return (
@@ -35,7 +35,7 @@ function TaskTable({ tasks, user, highlightedTaskId }) {
   }
 
   return (
-    <div className="task-table-container">
+    <div className={`task-table-container density-${density}`}>
       <div className="table-header">
         <div className="col-id">ID</div>
         <div className="col-name">Task Details</div>
@@ -53,6 +53,8 @@ function TaskTable({ tasks, user, highlightedTaskId }) {
             key={task.id} 
             task={task} 
             highlighted={String(task.id) === String(highlightedTaskId)} 
+            density={density}
+            onClick={() => onTaskClick(task)}
           />
         ))}
       </div>

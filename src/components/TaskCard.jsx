@@ -65,7 +65,7 @@ function getTimeRemaining(deadlineStr) {
   return { total, days, hours, minutes };
 }
 
-function TaskCard({ task, highlighted }) {
+function TaskCard({ task, highlighted, density, onClick }) {
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.Low;
   const overdue = isOverdue(task.deadline);
   
@@ -201,7 +201,7 @@ function TaskCard({ task, highlighted }) {
   return (
     <div 
       id={`task-${task.id}`}
-      className={`task-row priority-border-${task.priority.toLowerCase()} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
+      className={`task-row density-${density} priority-border-${task.priority.toLowerCase()} ${overdue ? 'overdue' : ''} ${isDueSoon ? 'due-soon' : ''} ${highlighted ? 'highlight-glow' : ''}`}
     >
       <div className="col-id">
         <span className="task-id">#{String(task.id).slice(-4)}</span>
@@ -214,37 +214,42 @@ function TaskCard({ task, highlighted }) {
               {task.project.name}
             </Badge>
           )}
-          <span className="task-name-text">
+          <span 
+            className="task-name-text clickable-detail"
+            onClick={onClick}
+          >
             {task.taskName}
           </span>
-          {task.recurring && task.recurring.enabled && (
+          {density === 'comfortable' && task.recurring && task.recurring.enabled && (
             <Badge color="primary" tone="soft" size="sm" icon={History} title={`Frequency: ${task.recurring.frequency}`} />
           )}
         </div>
         
-        <div className="task-meta-badges">
-          {task.isBillable && (
-            <Badge color="low" tone="soft" size="sm">
-              <span style={{ fontWeight: 'bold', marginRight: '2px' }}>$</span> Billable
-            </Badge>
-          )}
-          {task.tags?.map(tag => (
-            <Badge key={tag} color="primary" tone="outline" size="sm">{tag}</Badge>
-          ))}
-          {isBlocked && (
-            <Badge color="high" tone="soft" size="sm" icon={Ban}>
-              Blocked by: {incompleteBlockers.length}
-            </Badge>
-          )}
-          {overdue && localStatus !== 'Completed' && <Badge color="high" tone="solid" size="sm">Overdue</Badge>}
-          {isDueSoon && localStatus !== 'Completed' && (
-            <Badge color="warning" tone="soft" size="sm" className="pulse">
-              {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}{timeRemaining.hours}h {timeRemaining.minutes}m
-            </Badge>
-          )}
-        </div>
+        {density === 'comfortable' && (
+          <div className="task-meta-badges">
+            {task.isBillable && (
+              <Badge color="low" tone="soft" size="sm">
+                <span style={{ fontWeight: 'bold', marginRight: '2px' }}>$</span> Billable
+              </Badge>
+            )}
+            {task.tags?.map(tag => (
+              <Badge key={tag} color="primary" tone="outline" size="sm">{tag}</Badge>
+            ))}
+            {isBlocked && (
+              <Badge color="high" tone="soft" size="sm" icon={Ban}>
+                Blocked by: {incompleteBlockers.length}
+              </Badge>
+            )}
+            {overdue && localStatus !== 'Completed' && <Badge color="high" tone="solid" size="sm">Overdue</Badge>}
+            {isDueSoon && localStatus !== 'Completed' && (
+              <Badge color="warning" tone="soft" size="sm" className="pulse">
+                {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}{timeRemaining.hours}h {timeRemaining.minutes}m
+              </Badge>
+            )}
+          </div>
+        )}
 
-        {task.estimatedHours && (
+        {density === 'comfortable' && task.estimatedHours && (
           <div className="estimate-container">
             <div className="estimate-bar">
               <div 

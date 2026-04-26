@@ -10,14 +10,27 @@ import {
   Sun, 
   Moon, 
   LogOut,
-  X
+  X,
+  Maximize2,
+  Minimize2,
+  Filter
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import NotificationBell from './NotificationBell';
 import './Navbar.css';
 
-function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, lastUpdated, taskCount, onNavigateToTask }) {
+function Navbar({ 
+  searchTerm, 
+  onSearchChange, 
+  priorityFilter, 
+  onPriorityChange, 
+  lastUpdated, 
+  taskCount, 
+  onNavigateToTask,
+  density,
+  onDensityChange
+}) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -44,38 +57,46 @@ function Navbar({ searchTerm, onSearchChange, priorityFilter, onPriorityChange, 
 
       <div className="navbar-controls">
         {onSearchChange && user?.role !== 'admin' && (
-          <div className="search-wrapper">
+          <div className="search-wrapper-v2">
             <Search size={14} className="search-icon" />
             <input
               type="text"
-              className="search-input"
-              placeholder="Search by task or person..."
+              className="search-input-v2"
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
             />
             {searchTerm && (
               <button className="clear-btn" onClick={() => onSearchChange('')}>
-                <X size={14} />
+                <X size={12} />
               </button>
             )}
           </div>
         )}
 
         {onPriorityChange && (
-          <div className="filter-wrapper">
-            <label htmlFor="priority-filter" className="filter-label">Priority</label>
+          <div className="priority-pill-v2">
+            <Filter size={14} />
             <select
-              id="priority-filter"
-              className="priority-select"
               value={priorityFilter}
               onChange={(e) => onPriorityChange(e.target.value)}
             >
-              <option value="All">All Priorities</option>
+              <option value="All">All</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
           </div>
+        )}
+
+        {onDensityChange && (
+          <button 
+            className="density-toggle-btn" 
+            onClick={() => onDensityChange(density === 'comfortable' ? 'compact' : 'comfortable')}
+            title={density === 'comfortable' ? 'Switch to Compact View' : 'Switch to Comfortable View'}
+          >
+            {density === 'comfortable' ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
         )}
       </div>
 
