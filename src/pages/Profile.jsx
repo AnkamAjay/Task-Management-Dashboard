@@ -108,7 +108,7 @@ const Profile = () => {
         <div className="profile-card">
           <div className="profile-header">
             <div className="profile-avatar-large">
-              <UserIcon size={40} />
+              {profileData?.name?.charAt(0).toUpperCase()}
             </div>
             <div className="profile-title">
               <h1>User Profile</h1>
