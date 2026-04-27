@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import Analytics from './pages/Analytics';
 import Help from './pages/Help';
+import Profile from './pages/Profile';
 import './App.css'; // Keep global CSS logic
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Route path="/timesheet" element={<ProtectedRoute><Timesheet /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/help"      element={<ProtectedRoute><Help /></ProtectedRoute>} />
+              <Route path="/profile"   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               
               {/* Catch-all route gracefully redirects 404s back to Dashboard (which triggers auth checks) */}
               <Route path="*"         element={<Navigate to="/" replace />} />

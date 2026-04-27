@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, getMe } from '../controllers/authController.js';
+import { register, login, getMe, getProfile, changePassword } from '../controllers/authController.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -19,5 +19,7 @@ const authLimiter = rateLimit({
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.get('/me', verifyToken, getMe);
+router.get('/profile', verifyToken, getProfile);
+router.patch('/password', verifyToken, authLimiter, changePassword);
 
 export default router;
